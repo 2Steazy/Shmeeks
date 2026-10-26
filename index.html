@@ -252,6 +252,15 @@ b{font-weight:800}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:var(--paper);padding:10px 18px;border-radius:999px;font-weight:800;opacity:0;transition:opacity .2s;pointer-events:none;z-index:120}
 .toast.show{opacity:1}
 .shake{animation:shake .35s}
+.hint{margin:-6px 0 12px;min-height:0;max-height:0;overflow:hidden;font-weight:800;color:var(--red);font-size:15px;transition:max-height .2s}
+.hint.show{max-height:60px;min-height:22px}
+.curve{margin:4px 0 20px;background:var(--cream);border:3px solid var(--navy);border-radius:22px;padding:14px 10px 6px}
+.curve figcaption{text-align:center;margin-bottom:2px}
+.curve .pct{display:block;font-family:var(--display);font-size:clamp(18px,5vw,22px);color:var(--navy)}
+.curve small{display:block;color:var(--muted);font-weight:700;font-size:12px;letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
+.curve svg{display:block;width:100%;height:auto}
+.curve .you{font:800 12px "Jost",sans-serif;fill:var(--paper);letter-spacing:1px}
+.curve .ax{font:800 12px "Jost",sans-serif;fill:var(--muted)}
 @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 footer{text-align:center;margin-top:34px;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--sky)}
 @media (max-width:420px){.card{padding:18px}.ladder .ex{display:none}}
@@ -588,10 +597,12 @@ function grade(raw,q){
 function todayKey(){ return new Date().toLocaleDateString("en-CA"); }
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
 function hashStr(s){let h=1779033703^s.length;for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),3432918353);h=h<<13|h>>>19;}return h>>>0;}
-function pickRound(rng){
+function pickRound(rng, avoid=[]){
   const idx=BANK.map((_,i)=>i);
   for(let i=idx.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}
-  return idx.slice(0,ROUND_LEN).map(i=>BANK[i]);
+  // questions the player hasn't seen lately go first
+  const fresh=idx.filter(i=>!avoid.includes(BANK[i].q)), stale=idx.filter(i=>avoid.includes(BANK[i].q));
+  return [...fresh,...stale].slice(0,ROUND_LEN).map(i=>BANK[i]);
 }
 const store = {
   get(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}},
@@ -621,10 +632,10 @@ function home(){
   <div class="card">
     <h2>Come on down!</h2>
     ${done ? `<p class="lead">You've played today's round: <b>${fmt(done.score)} pts</b> &nbsp;${done.emojis}</p>
-      <div class="row"><button class="btn pink" id="bonus">Bonus round</button><button class="btn alt" id="share">Share today</button></div>`
+      <div class="row"><button class="btn pink" id="bonus">Play a random set</button><button class="btn alt" id="share">Share today</button></div>`
       : `<p class="lead">Today's round is ready: <b>${ROUND_LEN} questions</b>, <b>${TIME_LIMIT} seconds</b> each.</p>
       <button class="btn block" id="play">Play today's round</button>`}
-    <p class="note">A new daily round drops at midnight.</p>
+    <p class="note">${done?"Random sets are unlimited. ":""}A new daily round drops at midnight.</p>
   </div>
   <section class="card how">
     <div class="ribbon">HOW TO PLAY</div>
@@ -646,8 +657,10 @@ function home(){
 }
 
 function start(mode){
-  const rng = mode==="daily" ? mulberry32(hashStr("shmeeks"+todayKey())) : Math.random;
-  S={mode, qs:pickRound(rng), i:0, results:[]};
+  const recent = store.get("shmeeks-recent")||[];
+  const qs = mode==="daily" ? pickRound(mulberry32(hashStr("shmeeks"+todayKey()))) : pickRound(Math.random, recent);
+  store.set("shmeeks-recent",[...qs.map(q=>q.q),...recent].slice(0,14));
+  S={mode, qs, i:0, results:[]};
   ask();
 }
 
@@ -662,13 +675,21 @@ function ask(){
       <div class="timer-label"><span>Time left</span><span id="secs">${TIME_LIMIT}s</span></div>
       <form id="f" autocomplete="off">
         <div class="tag"><input id="ans" type="text" placeholder="Type your answer…" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="60" aria-label="Your answer"></div>
+        <p class="hint" id="hint" role="status"></p>
         <button class="btn block" type="submit">Lock it in!</button>
       </form>
     </div>`;
-  const input=document.getElementById("ans"); input.focus();
+  const input=document.getElementById("ans"), hint=document.getElementById("hint"); input.focus();
+  input.addEventListener("input",()=>hint.classList.remove("show"));
   document.getElementById("f").onsubmit=e=>{
     e.preventDefault();
-    if(!input.value.trim()){ input.parentElement.classList.remove("shake"); void input.offsetWidth; input.parentElement.classList.add("shake"); return; }
+    const raw=input.value.trim();
+    if(!raw || grade(raw,q)<0){
+      // empty, or worth nothing: shake it off and let them try again
+      input.parentElement.classList.remove("shake"); void input.offsetWidth; input.parentElement.classList.add("shake");
+      if(raw){ hint.textContent=`"${raw}" isn't on the price list. Try another!`; hint.classList.add("show"); input.select(); }
+      return;
+    }
     lockIn(false);
   };
   const t0=performance.now(), bar=document.getElementById("bar"), secs=document.getElementById("secs");
@@ -749,19 +770,20 @@ function finish(){
   if(S.mode==="daily") store.set("shmeeks-daily-"+day,{score,emojis});
   const best=Math.max(store.get("shmeeks-best")||0,score); store.set("shmeeks-best",best);
   app.innerHTML=`<div class="card">
-    <h2 style="text-align:center">${S.mode==="daily"?"Today's winnings":"Bonus round"}</h2>
+    <h2 style="text-align:center">${S.mode==="daily"?"Today's winnings":"Random set"}</h2>
     <div class="total" id="tot">0</div>
     <div class="of">out of ${fmt(ROUND_LEN*1000)} · best ever ${fmt(best)}</div>
     <div class="rank">${rankFor(score)}</div>
     <div class="emojis">${emojis}</div>
+    ${curveHTML(score)}
     <ul class="summary">${S.results.map(r=>`
       <li><span>${r.tier.emoji}</span>
         <span>${esc(r.q.q.replace(/^What is the |^Which /,"").replace(/\?$/,""))}
           <small>You: ${r.raw?esc(r.raw):"—"} · Top: ${esc(r.q.ladder[0])}</small></span>
         <span class="sp">${r.tier.pts}</span></li>`).join("")}</ul>
+    <button class="btn block" id="again" style="margin-bottom:12px">${S.mode==="daily"?"Play a random set":"Another random set"}</button>
     <div class="row">
       ${S.mode==="daily"?`<button class="btn pink" id="share">Share</button>`:""}
-      <button class="btn" id="again">Bonus round</button>
       <button class="btn alt" id="menu">Home</button>
     </div>
   </div>`;
@@ -771,6 +793,43 @@ function finish(){
   // count-up
   const el=document.getElementById("tot"), t0=performance.now();
   (function tick(now){const p=Math.min(1,(now-t0)/900);el.textContent=fmt(Math.round(score*(1-Math.pow(1-p,3))));if(p<1)requestAnimationFrame(tick);})(t0);
+}
+
+/* Estimated spread of scores. There's no server collecting real scores yet,
+   so this is a model of a typical player: most land around 2,100 points. */
+const SCORE_MEAN=2100, SCORE_SD=1150;
+function normCdf(z){ // Abramowitz-Stegun erf approximation
+  const t=1/(1+0.3275911*Math.abs(z)/Math.SQRT2), y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-z*z/2);
+  return z>=0 ? (1+y)/2 : (1-y)/2;
+}
+function percentileFor(score){ return Math.min(99,Math.max(1,Math.round(normCdf((score-SCORE_MEAN)/SCORE_SD)*100))); }
+function curveHTML(score){
+  const W=520,H=200,L=24,Rr=496,base=158,top=34,MAX=ROUND_LEN*1000;
+  const X=v=>L+(v/MAX)*(Rr-L);
+  const pdf=v=>Math.exp(-0.5*((v-SCORE_MEAN)/SCORE_SD)**2);
+  const pts=[]; for(let v=0;v<=MAX;v+=70) pts.push([X(v),base-pdf(v)*(base-top)]);
+  const line=pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+  const sx=X(Math.min(score,MAX)), shade=pts.filter(p=>p[0]<=sx);
+  const sy=base-pdf(Math.min(score,MAX))*(base-top);
+  const area=`M${L} ${base} `+shade.map(p=>"L"+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ")+` L${sx.toFixed(1)} ${sy.toFixed(1)} L${sx.toFixed(1)} ${base} Z`;
+  const pct=percentileFor(score), lx=Math.min(Math.max(sx,78),W-78);
+  return `<figure class="curve">
+    <figcaption><span class="pct">Better than ${pct}% of players</span><small>Top ${100-pct<1?1:100-pct}% · estimate based on typical scores</small></figcaption>
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Bell curve of scores. Your score of ${fmt(score)} is better than about ${pct}% of players.">
+      <defs><pattern id="ht" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.2" fill="#173a4f" opacity=".25"/></pattern></defs>
+      <path d="${line} L${Rr} ${base} L${L} ${base} Z" fill="#efe0c0"/>
+      <path d="${area}" fill="#f5b738"/><path d="${area}" fill="url(#ht)"/>
+      <path d="${line}" fill="none" stroke="#173a4f" stroke-width="3" stroke-linejoin="round"/>
+      <line x1="${L}" y1="${base}" x2="${Rr}" y2="${base}" stroke="#173a4f" stroke-width="3"/>
+      <line x1="${sx.toFixed(1)}" y1="${base}" x2="${sx.toFixed(1)}" y2="${(sy-22).toFixed(1)}" stroke="#e2472e" stroke-width="3" stroke-dasharray="5 4"/>
+      <circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="7" fill="#e2472e" stroke="#173a4f" stroke-width="3"/>
+      <g transform="translate(${lx.toFixed(1)} ${(Math.max(sy-40,6)).toFixed(1)})">
+        <rect x="-58" y="-2" width="116" height="26" rx="13" fill="#173a4f"/>
+        <text x="0" y="16" text-anchor="middle" class="you">YOU · ${fmt(score)}</text>
+      </g>
+      ${[0,MAX/2,MAX].map(v=>`<text x="${X(v)}" y="${base+22}" text-anchor="${v===0?"start":v===MAX?"end":"middle"}" class="ax">${fmt(v)}</text>`).join("")}
+    </svg>
+  </figure>`;
 }
 
 function shareResult(score,emojis,day){
