@@ -1,551 +1,618 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shmeeks — Think Different</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Shmeeks</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Shmeeks: random trivia where you type your answer and close counts.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
+/* Layout: one narrow left-aligned play column; a header with the round pips, one question card, and a closeness meter that is the hero of every reveal. */
 :root {
-  --bg: #f8f5ed;
-  --ink: #24251f;
-  --green: #b9e9b0;
-  --orange: #ffb87e;
-  --border: #24251f;
+  --bg: #eef1f8;
+  --surface: #ffffff;
+  --sunk: #e2e6f2;
+  --ink: #161a33;
+  --muted: #5c6385;
+  --line: #cfd5e8;
+  --accent: #3634d6;
+  --accent-ink: #ffffff;
+  --sun: #ffcf33;
+  --sun-ink: #2a2200;
+  --good: #158a5c;
+  --ok: #b47e00;
+  --warm: #d4632a;
+  --miss: #c93c3c;
+  --shadow: 0 1px 0 rgba(22, 26, 51, .06), 0 10px 30px -12px rgba(22, 26, 51, .25);
+  --f-display: "Bungee", "Arial Black", Impact, sans-serif;
+  --f-body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1228; --surface: #191d3b; --sunk: #232853; --ink: #eef0ff; --muted: #a0a7cf; --line: #30366a;
+    --accent: #8f8dff; --accent-ink: #0f1228; --sun: #ffd23f; --sun-ink: #2a2200;
+    --good: #4ddc9c; --ok: #ffd23f; --warm: #ff9a5c; --miss: #ff7b7b;
+    --shadow: 0 1px 0 rgba(0,0,0,.3), 0 14px 34px -14px rgba(0,0,0,.7);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1228; --surface: #191d3b; --sunk: #232853; --ink: #eef0ff; --muted: #a0a7cf; --line: #30366a;
+  --accent: #8f8dff; --accent-ink: #0f1228; --sun: #ffd23f; --sun-ink: #2a2200;
+  --good: #4ddc9c; --ok: #ffd23f; --warm: #ff9a5c; --miss: #ff7b7b;
+  --shadow: 0 1px 0 rgba(0,0,0,.3), 0 14px 34px -14px rgba(0,0,0,.7);
+  color-scheme: dark;
+}
+
 * { box-sizing: border-box; }
+html, body { min-height: 100%; }
 body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
-}
-header {
-  padding: 22px 7%;
-  border-bottom: 2px solid var(--ink);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.logo {
-  font-size: 27px;
-  font-weight: 900;
-  letter-spacing: -1.5px;
-}
-.logo span { color: #579d58; }
-main {
-  max-width: 640px;
-  margin: auto;
-  padding: 55px 22px;
-  text-align: center;
-}
-h1 {
-  font-size: clamp(45px, 10vw, 78px);
-  letter-spacing: -4px;
-  line-height: 1;
-  margin: 12px 0 20px;
-}
-h2 { font-size: 31px; }
-p { line-height: 1.6; }
-.muted { color: #74756c; }
-.tag {
-  display: inline-block;
-  background: var(--green);
-  border: 2px solid var(--ink);
-  padding: 8px 15px;
-  border-radius: 30px;
-  font-size: 12px;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-button {
-  cursor: pointer;
-  font-weight: 800;
+  font-family: var(--f-body);
   font-size: 16px;
-  border: 2px solid var(--ink);
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 640px; margin: 0 auto; padding-block: 20px 48px; display: flex; flex-direction: column; gap: 20px; }
+
+/* Header */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.logo { font-family: var(--f-display); font-size: 26px; letter-spacing: .5px; color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; line-height: 1; }
+.logo b { color: var(--accent); font-weight: 400; }
+.status { display: flex; gap: 16px; align-items: baseline; font-size: 14px; color: var(--muted); }
+.status strong { font-family: var(--f-mono); color: var(--ink); font-size: 16px; font-variant-numeric: tabular-nums; }
+.pips { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
+.pip { height: 8px; border-radius: 4px; background: var(--sunk); transition: background .3s; }
+.pip.now { background: var(--accent); }
+.pip.s-good { background: var(--good); } .pip.s-ok { background: var(--ok); } .pip.s-warm { background: var(--warm); } .pip.s-miss { background: var(--miss); }
+
+/* Card */
+.card { background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); padding: 28px; display: flex; flex-direction: column; gap: 20px; }
+@media (max-width: 480px) { .card { padding: 20px; border-radius: 14px; } }
+.meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.chip { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; background: var(--sunk); color: var(--muted); }
+.chip.kind { background: var(--accent); color: var(--accent-ink); }
+.question { font-size: clamp(22px, 5vw, 30px); font-weight: 700; line-height: 1.22; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+
+form.answer { display: flex; gap: 10px; flex-wrap: wrap; }
+.answer input {
+  flex: 1 1 240px; min-width: 0;
+  font: 600 20px var(--f-body);
+  padding: 14px 16px;
   border-radius: 12px;
-  padding: 17px 25px;
-  background: var(--green);
+  border: 2px solid var(--line);
+  background: var(--bg);
   color: var(--ink);
-  box-shadow: 4px 4px 0 var(--ink);
-  transition: .15s;
 }
-button:hover {
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0 var(--ink);
-}
-button:disabled {
-  opacity: .5;
-  cursor: not-allowed;
-}
-.secondary { background: white; }
-.actions {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 32px;
-}
-.card {
-  background: white;
-  border: 2px solid var(--ink);
-  border-radius: 20px;
-  box-shadow: 6px 6px 0 var(--ink);
-  padding: 32px 25px;
-  margin: 30px 0;
-}
-input {
-  display: block;
-  width: 100%;
-  padding: 18px;
-  font-size: 20px;
-  border: 2px solid var(--ink);
+.answer input:focus { outline: none; border-color: var(--accent); }
+.answer input:disabled { opacity: .7; }
+.hint { font-size: 14px; color: var(--muted); margin: -8px 0 0; min-height: 21px; }
+.hint.err { color: var(--miss); font-weight: 600; }
+
+.btn {
+  font: 800 16px var(--f-body);
+  padding: 14px 22px;
   border-radius: 12px;
-  outline: none;
-  margin: 25px 0 18px;
+  border: 0;
+  cursor: pointer;
+  background: var(--accent);
+  color: var(--accent-ink);
+  transition: transform .12s, filter .12s;
 }
-input:focus { border-color: #579d58; }
-.progress {
-  height: 12px;
-  background: #e2e1d8;
-  border: 2px solid var(--ink);
-  border-radius: 20px;
-  overflow: hidden;
-}
-.progress > div {
-  height: 100%;
-  background: #80c87a;
-  transition: width .2s;
-}
-.topline {
-  display: flex;
-  justify-content: space-between;
-  margin: 20px 0;
-  font-weight: bold;
-}
-.score {
-  font-size: 78px;
-  font-weight: 900;
-  letter-spacing: -4px;
-}
-.answer-row {
-  padding: 13px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
-}
-.hidden { display: none; }
-footer {
-  text-align: center;
-  padding: 30px;
-  color: #888;
-  font-size: 12px;
-}
+.btn:hover { filter: brightness(1.08); }
+.btn:active { transform: translateY(1px); }
+.btn.sun { background: var(--sun); color: var(--sun-ink); }
+.btn.ghost { background: var(--sunk); color: var(--ink); }
+.btn:focus-visible, .logo:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+
+/* Reveal */
+.reveal { display: flex; flex-direction: column; gap: 16px; border-top: 2px dashed var(--line); padding-top: 20px; }
+.verdict-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.verdict { font-family: var(--f-display); font-size: 24px; line-height: 1; }
+.points { font-family: var(--f-mono); font-weight: 700; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
+.points small { font-size: 15px; color: var(--muted); font-weight: 500; }
+.c-good { color: var(--good); } .c-ok { color: var(--ok); } .c-warm { color: var(--warm); } .c-miss { color: var(--miss); }
+
+.meter { position: relative; padding-bottom: 20px; }
+.track { height: 16px; border-radius: 8px; background: var(--sunk); overflow: hidden; }
+.fill { height: 100%; width: 0; border-radius: 8px; background: var(--sun); transition: width .7s cubic-bezier(.2,.8,.2,1); }
+.ticks { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; font: 500 11px var(--f-mono); color: var(--muted); }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.fact { background: var(--bg); border-radius: 12px; padding: 12px 14px; min-width: 0; }
+.fact span { display: block; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.fact strong { display: block; font-size: 18px; overflow-wrap: anywhere; }
+.fact strong.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+
+/* Start screen */
+.hero { display: flex; flex-direction: column; gap: 14px; }
+.hero h1 { font-family: var(--f-display); font-weight: 400; font-size: clamp(46px, 13vw, 84px); line-height: .95; margin: 8px 0 0; letter-spacing: 1px; }
+.hero h1 b { color: var(--accent); font-weight: 400; }
+.tagline { font-size: 20px; font-weight: 600; margin: 0; max-width: 34ch; }
+.lede { margin: 0; color: var(--muted); max-width: 56ch; }
+.rules { display: grid; gap: 10px; }
+.rule { display: grid; grid-template-columns: 92px 1fr; gap: 14px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.rule:last-child { border-bottom: 0; }
+.rule .k { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+.rule p { margin: 0; }
+.rule em { font-style: normal; font-family: var(--f-mono); font-size: 14px; background: var(--sunk); padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.best { font-size: 14px; color: var(--muted); margin: 0; }
+.best strong { font-family: var(--f-mono); color: var(--ink); }
+
+/* End screen */
+.final { display: flex; flex-direction: column; gap: 4px; }
+.final .label { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.final .total { font-family: var(--f-mono); font-weight: 700; font-size: clamp(56px, 16vw, 88px); line-height: 1; font-variant-numeric: tabular-nums; }
+.final .total small { font-size: .35em; color: var(--muted); font-weight: 500; }
+.final .rank { font-family: var(--f-display); font-size: 24px; color: var(--accent); }
+.rounds { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.rounds li { display: grid; grid-template-columns: 14px 1fr auto; gap: 12px; align-items: start; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.rounds li:last-child { border-bottom: 0; }
+.dot { width: 12px; height: 12px; border-radius: 50%; margin-top: 5px; }
+.dot.s-good { background: var(--good); } .dot.s-ok { background: var(--ok); } .dot.s-warm { background: var(--warm); } .dot.s-miss { background: var(--miss); }
+.rounds .q { font-weight: 600; min-width: 0; }
+.rounds .sub { display: block; font-weight: 400; font-size: 14px; color: var(--muted); }
+.rounds .pts { font-family: var(--f-mono); font-weight: 700; font-variant-numeric: tabular-nums; }
+.share { width: 100%; font: 500 14px var(--f-mono); padding: 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); resize: none; }
+.foot { font-size: 13px; color: var(--muted); text-align: left; }
+
+@media (prefers-reduced-motion: reduce) { .fill, .pip, .btn { transition: none; } }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">shmeek<span>s.</span></div>
-  <span class="tag">The uncommon answer game</span>
-</header>
+<div class="wrap">
+  <header class="top">
+    <button class="logo" id="home" type="button" aria-label="Shmeeks home">SHMEE<b>KS</b></button>
+    <div class="status" id="status" hidden>
+      <span>Round <strong id="roundNum">1</strong>/10</span>
+      <span>Score <strong id="scoreNum">0</strong></span>
+    </div>
+  </header>
+  <div class="pips" id="pips" aria-hidden="true"></div>
 
-<main>
-<section id="home">
-  <div class="tag">A little weird is good</div>
-  <h1>Think outside<br>the obvious.</h1>
-  <p class="muted">
-    Seven questions. Twenty seconds each.
-    The more unusual your correct answers,
-    the more points you earn.
-  </p>
-  <div class="actions">
-    <button onclick="startGame('daily')">Daily Shmeeks</button>
-    <button class="secondary" onclick="startGame('unlimited')">
-      Unlimited Play
-    </button>
-  </div>
-  <div class="card">
-    <h2>How to play</h2>
-    <p>1. Read the question.</p>
-    <p>2. Think of a correct, uncommon answer.</p>
-    <p>3. Submit before time runs out.</p>
-    <p>4. Collect points and become a Shmeek.</p>
-  </div>
-</section>
+  <!-- Start -->
+  <section class="card" id="start">
+    <div class="hero">
+      <h1>SHMEE<b>KS</b></h1>
+      <p class="tagline">Random trivia where close counts.</p>
+      <p class="lede">Ten questions. No multiple choice. Type what you think the answer is, and you get points for how close you land.</p>
+    </div>
+    <div class="rules" aria-label="How scoring works">
+      <div class="rule"><span class="k">Numbers</span><p>Scored by how far off you are. A piano has 88 keys, so guessing <em>80</em> still earns <em id="demoNum">80 pts</em>.</p></div>
+      <div class="rule"><span class="k">Years</span><p>Every year off costs you. Moon landing in <em>1968</em>? That's <em id="demoYear">87 pts</em>.</p></div>
+      <div class="rule"><span class="k">Words</span><p>Typos are forgiven. <em>Kilimanjoro</em> scores <em id="demoWord">100 pts</em>.</p></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="playDaily" type="button">Play today's ten</button>
+      <button class="btn ghost" id="playRandom" type="button">Random ten</button>
+    </div>
+    <p class="best" id="bestLine"></p>
+  </section>
 
-<section id="game" class="hidden">
-  <div class="topline">
-    <span id="count">Question 1 / 7</span>
-    <span id="timer">20s</span>
-  </div>
-  <div class="progress"><div id="bar"></div></div>
-  <div class="card">
-    <span class="tag" id="category">Category</span>
-    <h2 id="question"></h2>
-    <form id="answerForm">
-      <input id="answer" autocomplete="off"
-        placeholder="Your uncommon answer..."
-        maxlength="100" required>
-      <button type="submit" id="submitBtn">
-        Lock in answer
-      </button>
+  <!-- Play -->
+  <section class="card" id="play" hidden>
+    <div class="meta">
+      <span class="chip kind" id="kindChip">Number</span>
+      <span class="chip" id="catChip">Science</span>
+    </div>
+    <h2 class="question" id="qText">Question</h2>
+    <form class="answer" id="answerForm" autocomplete="off">
+      <input aria-label="Your answer" id="answerInput" name="answer" type="text" placeholder="Type your answer" spellcheck="false" autocapitalize="off">
+      <button class="btn sun" id="submitBtn" type="submit">Lock it in</button>
     </form>
-  </div>
-  <p class="muted" id="total">Total: 0 points</p>
-</section>
+    <p class="hint" id="hint" aria-live="polite"></p>
 
-<section id="feedback" class="hidden">
-  <div class="card">
-    <div class="tag" id="verdict"></div>
-    <h2 id="feedbackTitle"></h2>
-    <div class="score" id="earned"></div>
-    <p id="feedbackText"></p>
-    <button onclick="nextQuestion()">Continue</button>
-  </div>
-</section>
+    <div class="reveal" id="reveal" hidden aria-live="polite">
+      <div class="verdict-row">
+        <span class="verdict" id="verdict">Bullseye</span>
+        <span class="points" id="points">100 <small>/ 100</small></span>
+      </div>
+      <div class="meter" aria-hidden="true">
+        <div class="track"><div class="fill" id="fill"></div></div>
+        <div class="ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+      </div>
+      <div class="facts">
+        <div class="fact"><span>You said</span><strong id="yourAns">—</strong></div>
+        <div class="fact"><span>Answer</span><strong id="realAns">—</strong></div>
+        <div class="fact" id="offBox"><span>Off by</span><strong class="num" id="offBy">—</strong></div>
+      </div>
+      <div class="actions"><button class="btn" id="nextBtn" type="button">Next question</button></div>
+    </div>
+  </section>
 
-<section id="results" class="hidden">
-  <span class="tag">Challenge complete</span>
-  <h1>Well played,<br>Shmeek.</h1>
-  <p>Your final score</p>
-  <div class="score" id="finalScore"></div>
-  <p class="muted">Out of 700 possible points</p>
-  <div class="card" id="breakdown"></div>
-  <div class="actions">
-    <button onclick="shareScore()">Share results</button>
-    <button class="secondary" onclick="startGame('unlimited')">
-      Play again
-    </button>
-  </div>
-</section>
-</main>
+  <!-- End -->
+  <section class="card" id="end" hidden>
+    <div class="final">
+      <span class="label" id="endLabel">Today's ten</span>
+      <span class="total"><span id="total">0</span><small> / 1000</small></span>
+      <span class="rank" id="rank">Sharp Guesser</span>
+    </div>
+    <ul class="rounds" id="rounds"></ul>
+    <textarea class="share" id="shareText" rows="4" readonly aria-label="Shareable result"></textarea>
+    <div class="actions">
+      <button class="btn sun" id="copyBtn" type="button">Copy result</button>
+      <button class="btn" id="againRandom" type="button">Random ten</button>
+      <button class="btn ghost" id="againDaily" type="button">Replay today's</button>
+    </div>
+  </section>
 
-<footer>© Shmeeks — Think weird. Score big.</footer>
+  <p class="foot">Shmeeks · a new set of ten every day, or as many random rounds as you like.</p>
+</div>
 
 <script>
-const bank = [
-  {
-    category: "Animals",
-    question: "Name an animal that lays eggs.",
-    answers: {
-      chicken: 10, duck: 15, turtle: 25,
-      snake: 30, crocodile: 45,
-      platypus: 85, echidna: 100
-    }
-  },
-  {
-    category: "Geography",
-    question: "Name a country in Africa.",
-    answers: {
-      egypt: 10, nigeria: 15, kenya: 20,
-      morocco: 25, ghana: 35,
-      botswana: 60, lesotho: 85,
-      eswatini: 100
-    }
-  },
-  {
-    category: "Science",
-    question: "Name a chemical element.",
-    answers: {
-      oxygen: 5, hydrogen: 10, gold: 15,
-      carbon: 20, iron: 25,
-      tungsten: 55, osmium: 85,
-      promethium: 100
-    }
-  },
-  {
-    category: "Food",
-    question: "Name a type of pasta.",
-    answers: {
-      spaghetti: 5, penne: 10,
-      ravioli: 15, linguine: 20,
-      rigatoni: 30, orzo: 45,
-      orecchiette: 80, trofie: 100
-    }
-  },
-  {
-    category: "History",
-    question: "Name an ancient civilization.",
-    answers: {
-      roman: 10, egyptian: 15,
-      greek: 20, maya: 30,
-      inca: 35, sumerian: 65,
-      minoan: 85, olmec: 100
-    }
-  },
-  {
-    category: "Nature",
-    question: "Name a type of cloud.",
-    answers: {
-      cumulus: 10, cirrus: 20,
-      stratus: 25, cumulonimbus: 45,
-      altocumulus: 60,
-      mammatus: 85,
-      noctilucent: 100
-    }
-  },
-  {
-    category: "Music",
-    question: "Name a musical instrument.",
-    answers: {
-      guitar: 5, piano: 5, drums: 10,
-      violin: 15, trumpet: 20,
-      oboe: 50, theremin: 85,
-      nyckelharpa: 100
-    }
-  },
-  {
-    category: "Space",
-    question: "Name a moon in our solar system.",
-    answers: {
-      moon: 5, titan: 30, europa: 35,
-      io: 40, ganymede: 45,
-      enceladus: 65, triton: 75,
-      miranda: 100
-    }
-  },
-  {
-    category: "Sports",
-    question: "Name an Olympic sport.",
-    answers: {
-      swimming: 5, athletics: 10,
-      gymnastics: 15, basketball: 20,
-      fencing: 45, rowing: 50,
-      modernpentathlon: 90,
-      breaking: 100
-    }
-  },
-  {
-    category: "Gaming",
-    question: "Name a video game franchise.",
-    answers: {
-      mario: 5, pokemon: 10,
-      minecraft: 10, zelda: 20,
-      halo: 25, metroid: 50,
-      pikmin: 70, katamari: 100
-    }
-  },
-  {
-    category: "Plants",
-    question: "Name a carnivorous plant.",
-    answers: {
-      venusflytrap: 10,
-      pitcherplant: 35,
-      sundew: 65,
-      butterwort: 85,
-      bladderwort: 100
-    }
-  },
-  {
-    category: "Languages",
-    question: "Name a language spoken in Europe.",
-    answers: {
-      english: 5, french: 10,
-      spanish: 10, german: 15,
-      italian: 20, polish: 35,
-      basque: 80, romansh: 100
-    }
-  },
-  {
-    category: "Ocean",
-    question: "Name an animal that lives in the deep sea.",
-    answers: {
-      shark: 10, squid: 20,
-      anglerfish: 45, gulper eel: 70,
-      barreleye: 85, dumbo octopus: 100
-    }
-  },
-  {
-    category: "Art",
-    question: "Name a famous painter.",
-    answers: {
-      picasso: 5, vangogh: 10,
-      monet: 15, rembrandt: 20,
-      caravaggio: 45, klimt: 50,
-      hilmaafklint: 90, arcimboldo: 100
-    }
+(function () {
+  "use strict";
+
+  // ---------- Question bank ----------
+  var BANK = {
+    number: [
+      { q: "How many keys does a standard piano have?", a: 88, cat: "Music" },
+      { q: "How many bones are in the adult human body?", a: 206, cat: "Science" },
+      { q: "How tall is Mount Everest, in feet?", a: 29032, cat: "Geography" },
+      { q: "How many member states are in the United Nations?", a: 193, cat: "World" },
+      { q: "How many Earth days does it take Mars to orbit the Sun?", a: 687, cat: "Space" },
+      { q: "How many squares are on a chessboard?", a: 64, cat: "Games" },
+      { q: "How long is a marathon, in miles?", a: 26.2, cat: "Sports" },
+      { q: "How many elements are on the periodic table?", a: 118, cat: "Science" },
+      { q: "How many hearts does an octopus have?", a: 3, cat: "Nature" },
+      { q: "How many teeth are in a full adult set?", a: 32, cat: "Science" },
+      { q: "At sea level, water boils at what temperature in °F?", a: 212, cat: "Science" },
+      { q: "On average, how far is the Moon from Earth, in miles?", a: 238855, cat: "Space" },
+      { q: "How many time zones does Russia span?", a: 11, cat: "Geography" },
+      { q: "How many hours are in a week?", a: 168, cat: "Numbers" },
+      { q: "How many pounds are in a stone?", a: 14, cat: "Numbers" },
+      { q: "How long is an Olympic swimming pool, in meters?", a: 50, cat: "Sports" },
+      { q: "How many amendments does the US Constitution have?", a: 27, cat: "History" },
+      { q: "How many feet are in a mile?", a: 5280, cat: "Numbers" },
+      { q: "How many colored stickers are on a standard 3×3 Rubik's Cube?", a: 54, cat: "Games" },
+      { q: "How tall is the Burj Khalifa, in meters?", a: 828, cat: "Places" },
+      { q: "How many players per team are on a soccer field at once?", a: 11, cat: "Sports" },
+      { q: "How many liters are in one US gallon?", a: 3.785, cat: "Numbers" },
+      { q: "How many minutes are in a day?", a: 1440, cat: "Numbers" },
+      { q: "How many legs does a spider have?", a: 8, cat: "Nature" },
+      { q: "How many sides does a dodecagon have?", a: 12, cat: "Math" },
+      { q: "How many strings does a standard violin have?", a: 4, cat: "Music" },
+      { q: "How many seconds are in an hour?", a: 3600, cat: "Numbers" },
+      { q: "How many US states have a Pacific Ocean coastline?", a: 5, cat: "Geography" },
+      { q: "About how many miles around is Earth at the equator?", a: 24901, cat: "Geography" }
+    ],
+    year: [
+      { q: "In what year did Apollo 11 land on the Moon?", a: 1969, cat: "Space" },
+      { q: "In what year did the Titanic sink?", a: 1912, cat: "History" },
+      { q: "In what year did the Berlin Wall fall?", a: 1989, cat: "History" },
+      { q: "In what year was the US Declaration of Independence adopted?", a: 1776, cat: "History" },
+      { q: "In what year was the first iPhone released?", a: 2007, cat: "Tech" },
+      { q: "In what year did the Wright brothers make their first powered flight?", a: 1903, cat: "History" },
+      { q: "In what year did Columbus first reach the Americas?", a: 1492, cat: "History" },
+      { q: "In what year did the Golden Gate Bridge open?", a: 1937, cat: "Places" },
+      { q: "In what year were the first modern Olympic Games held in Athens?", a: 1896, cat: "Sports" },
+      { q: "In what year was the Magna Carta sealed?", a: 1215, cat: "History" },
+      { q: "In what year did the Chernobyl nuclear disaster happen?", a: 1986, cat: "History" },
+      { q: "In what year did YouTube launch?", a: 2005, cat: "Tech" },
+      { q: "In what year was the Eiffel Tower completed?", a: 1889, cat: "Places" },
+      { q: "In what year was Sputnik 1 launched?", a: 1957, cat: "Space" },
+      { q: "In what year did California become a US state?", a: 1850, cat: "History" },
+      { q: "In what year did World War I begin?", a: 1914, cat: "History" },
+      { q: "In what year did World War II end?", a: 1945, cat: "History" },
+      { q: "In what year was Netflix founded?", a: 1997, cat: "Tech" }
+    ],
+    text: [
+      { q: "What is the capital of Australia?", a: ["Canberra"], cat: "Geography" },
+      { q: "What is the largest planet in our solar system?", a: ["Jupiter"], cat: "Space" },
+      { q: "Which element has the chemical symbol Au?", a: ["Gold"], cat: "Science" },
+      { q: "Who painted The Starry Night?", a: ["Vincent van Gogh", "Van Gogh"], cat: "Art" },
+      { q: "What is the longest river in South America?", a: ["Amazon", "Amazon River"], cat: "Geography" },
+      { q: "Who wrote the novel 1984?", a: ["George Orwell", "Orwell"], cat: "Books" },
+      { q: "What is the capital of Canada?", a: ["Ottawa"], cat: "Geography" },
+      { q: "Which gas do plants absorb from the air to make food?", a: ["Carbon dioxide", "CO2"], cat: "Science" },
+      { q: "What is the largest ocean on Earth?", a: ["Pacific", "Pacific Ocean"], cat: "Geography" },
+      { q: "What is the currency of Japan?", a: ["Yen", "Japanese yen"], cat: "World" },
+      { q: "Who composed the Moonlight Sonata?", a: ["Ludwig van Beethoven", "Beethoven"], cat: "Music" },
+      { q: "What is the largest hot desert in the world?", a: ["Sahara", "Sahara Desert"], cat: "Geography" },
+      { q: "Which scientist developed the theory of general relativity?", a: ["Albert Einstein", "Einstein"], cat: "Science" },
+      { q: "What is the capital of Turkey?", a: ["Ankara"], cat: "Geography" },
+      { q: "What is the fastest land animal?", a: ["Cheetah"], cat: "Nature" },
+      { q: "Which element has the chemical symbol Fe?", a: ["Iron"], cat: "Science" },
+      { q: "What is the tallest mountain in Africa?", a: ["Kilimanjaro", "Mount Kilimanjaro", "Mt Kilimanjaro"], cat: "Geography" },
+      { q: "What is the largest organ of the human body?", a: ["Skin"], cat: "Science" },
+      { q: "Which Shakespeare play is about a prince of Denmark?", a: ["Hamlet"], cat: "Books" },
+      { q: "What is the capital of Brazil?", a: ["Brasília", "Brasilia"], cat: "Geography" },
+      { q: "Which planet is best known for its rings?", a: ["Saturn"], cat: "Space" },
+      { q: "Who painted the ceiling of the Sistine Chapel?", a: ["Michelangelo"], cat: "Art" },
+      { q: "What is the smallest country in the world by area?", a: ["Vatican City", "Vatican", "Holy See"], cat: "Geography" },
+      { q: "What is the name of the galaxy we live in?", a: ["Milky Way", "Milky Way Galaxy"], cat: "Space" },
+      { q: "Who is credited with patenting the telephone in 1876?", a: ["Alexander Graham Bell", "Graham Bell"], cat: "History" },
+      { q: "What is the main ingredient in guacamole?", a: ["Avocado", "Avocados"], cat: "Food" },
+      { q: "What is the capital of New Zealand?", a: ["Wellington"], cat: "Geography" },
+      { q: "What is the national animal of Scotland?", a: ["Unicorn"], cat: "World" },
+      { q: "What is the lightest chemical element?", a: ["Hydrogen"], cat: "Science" },
+      { q: "What is the longest bone in the human body?", a: ["Femur", "Thigh bone", "Thighbone"], cat: "Science" },
+      { q: "What is the hardest natural substance?", a: ["Diamond"], cat: "Science" },
+      { q: "Which language has the most native speakers?", a: ["Mandarin", "Mandarin Chinese", "Chinese"], cat: "World" },
+      { q: "What is the largest country by area?", a: ["Russia"], cat: "Geography" },
+      { q: "What is a baby kangaroo called?", a: ["Joey"], cat: "Nature" },
+      { q: "Which planet is closest to the Sun?", a: ["Mercury"], cat: "Space" },
+      { q: "In which city is the Colosseum?", a: ["Rome"], cat: "Places" },
+      { q: "Who wrote Pride and Prejudice?", a: ["Jane Austen", "Austen"], cat: "Books" },
+      { q: "In which sport would you score a birdie?", a: ["Golf"], cat: "Sports" },
+      { q: "Which red gemstone is July's birthstone?", a: ["Ruby"], cat: "Nature" },
+      { q: "Which country gave the Statue of Liberty to the United States?", a: ["France"], cat: "History" },
+      { q: "What is the largest species of shark?", a: ["Whale shark"], cat: "Nature" }
+    ]
+  };
+  var MIX = { text: 4, number: 3, year: 3 };
+  var ROUNDS = 10;
+
+  // ---------- Randomness ----------
+  function hashStr(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function shuffle(arr, rng) { var a = arr.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rng() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function todayKey() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function pickSet(rng) {
+    var set = [];
+    Object.keys(MIX).forEach(function (kind) {
+      shuffle(BANK[kind], rng).slice(0, MIX[kind]).forEach(function (item) { set.push(Object.assign({ kind: kind }, item)); });
+    });
+    return shuffle(set, rng);
   }
-];
 
-let questions = [];
-let index = 0;
-let points = 0;
-let history = [];
-let seconds = 20;
-let interval;
-let mode = "daily";
-let locked = false;
+  // ---------- Scoring ----------
+  function norm(s) {
+    return String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+      .replace(/&/g, " and ").replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim()
+      .replace(/^(the|a|an) /, "");
+  }
+  function lev(a, b) {
+    if (a === b) return 0;
+    var m = a.length, n = b.length; if (!m) return n; if (!n) return m;
+    var prev = new Array(n + 1), cur = new Array(n + 1);
+    for (var j = 0; j <= n; j++) prev[j] = j;
+    for (var i = 1; i <= m; i++) {
+      cur[0] = i;
+      for (j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      var t = prev; prev = cur; cur = t;
+    }
+    return prev[n];
+  }
+  function scoreText(input, answers) {
+    var g = norm(input); if (!g) return 0;
+    var best = 0;
+    answers.forEach(function (ans) {
+      var a = norm(ans), s;
+      if (g === a) s = 100;
+      else if (a.length >= 4 && (" " + g + " ").indexOf(" " + a + " ") !== -1 && g.length <= a.length + 14) s = 100;
+      else {
+        var d = lev(g, a);
+        if (a.length <= 4) s = d === 1 ? 60 : 0;
+        else {
+          var sim = 1 - d / Math.max(g.length, a.length);
+          if (sim >= 0.9) s = 100;
+          else if (sim >= 0.75) s = Math.round(70 + (sim - 0.75) / 0.15 * 25);
+          else if (sim >= 0.6) s = Math.round(20 + (sim - 0.6) / 0.15 * 40);
+          else s = 0;
+        }
+      }
+      if (s > best) best = s;
+    });
+    return best;
+  }
+  function parseNum(input) {
+    var s = String(input).replace(/,/g, "").replace(/\$/g, "").trim().toLowerCase();
+    var m = s.match(/(-?\d*\.?\d+)\s*(thousand|million|billion|k|m|b)?/);
+    if (!m) return null;
+    var v = parseFloat(m[1]); if (isNaN(v)) return null;
+    var mult = { k: 1e3, thousand: 1e3, m: 1e6, million: 1e6, b: 1e9, billion: 1e9 }[m[2]] || 1;
+    return v * mult;
+  }
+  function scoreNumber(g, a) {
+    if (g === null || g <= 0) return 0;
+    var r = Math.abs(Math.log(g / a));
+    if (r <= 0.005) return 100;
+    return Math.max(0, Math.min(99, Math.round(100 * Math.exp(-2.3 * r))));
+  }
+  function scoreYear(g, a) {
+    if (g === null) return 0;
+    var d = Math.abs(Math.round(g) - a);
+    return d === 0 ? 100 : Math.round(100 * Math.exp(-d / 7));
+  }
+  function band(p) { return p >= 85 ? "good" : p >= 50 ? "ok" : p > 0 ? "warm" : "miss"; }
+  function verdictFor(p) { return p === 100 ? "Bullseye" : p >= 85 ? "So close" : p >= 50 ? "Nearby" : p > 0 ? "Warm-ish" : "Miss"; }
+  function rankFor(t) { return t >= 900 ? "Shmeeks Supreme" : t >= 750 ? "Big Brain" : t >= 600 ? "Sharp Guesser" : t >= 400 ? "Respectable" : t >= 200 ? "Warming Up" : "Fresh Shmeek"; }
+  function fmt(n) { return Number(n).toLocaleString("en-US", { maximumFractionDigits: 3 }); }
 
-const $ = id => document.getElementById(id);
+  // ---------- Storage (optional) ----------
+  function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
-function show(id) {
-  ["home","game","feedback","results"].forEach(name => {
-    $(name).classList.toggle("hidden", name !== id);
+  // ---------- DOM ----------
+  var $ = function (id) { return document.getElementById(id); };
+  var els = {
+    start: $("start"), play: $("play"), end: $("end"), status: $("status"), pips: $("pips"),
+    roundNum: $("roundNum"), scoreNum: $("scoreNum"), kindChip: $("kindChip"), catChip: $("catChip"),
+    qText: $("qText"), form: $("answerForm"), input: $("answerInput"), submit: $("submitBtn"), hint: $("hint"),
+    reveal: $("reveal"), verdict: $("verdict"), points: $("points"), fill: $("fill"),
+    yourAns: $("yourAns"), realAns: $("realAns"), offBox: $("offBox"), offBy: $("offBy"), next: $("nextBtn"),
+    total: $("total"), rank: $("rank"), rounds: $("rounds"), share: $("shareText"), copy: $("copyBtn"), endLabel: $("endLabel"),
+    bestLine: $("bestLine")
+  };
+  for (var i = 0; i < ROUNDS; i++) { var p = document.createElement("div"); p.className = "pip"; els.pips.appendChild(p); }
+
+  var state = { mode: "daily", day: todayKey(), set: [], idx: 0, results: [], phase: "start" };
+
+  function show(section) {
+    ["start", "play", "end"].forEach(function (s) { els[s].hidden = s !== section; });
+    els.status.hidden = section !== "play";
+  }
+  function paintPips() {
+    Array.prototype.forEach.call(els.pips.children, function (pip, i) {
+      var r = state.results[i];
+      pip.className = "pip" + (r ? " s-" + band(r.points) : (state.phase !== "start" && state.phase !== "end" && i === state.idx ? " now" : ""));
+    });
+  }
+  function runningTotal() { return state.results.reduce(function (s, r) { return s + r.points; }, 0); }
+
+  function renderBest() {
+    var best = load("shmeeks.best");
+    var daily = load("shmeeks.daily." + state.day);
+    var parts = [];
+    if (daily) parts.push("Today's score: <strong>" + daily + "</strong>");
+    if (best) parts.push("Best ever: <strong>" + best + "</strong>");
+    els.bestLine.innerHTML = parts.join(" · ");
+    els.bestLine.hidden = !parts.length;
+  }
+
+  function startGame(mode) {
+    state.mode = mode;
+    state.day = todayKey();
+    var seed = mode === "daily" ? hashStr("shmeeks:" + state.day) : (Math.random() * 4294967296) >>> 0;
+    state.set = pickSet(mulberry32(seed));
+    state.idx = 0; state.results = [];
+    show("play");
+    ask();
+  }
+
+  function ask() {
+    state.phase = "ask";
+    var q = state.set[state.idx];
+    els.roundNum.textContent = state.idx + 1;
+    els.scoreNum.textContent = runningTotal();
+    els.kindChip.textContent = q.kind === "number" ? "Number" : q.kind === "year" ? "Year" : "Answer";
+    els.catChip.textContent = q.cat;
+    els.qText.textContent = q.q;
+    els.input.value = "";
+    els.input.disabled = false;
+    els.submit.disabled = false;
+    els.input.setAttribute("inputmode", q.kind === "text" ? "text" : q.kind === "year" ? "numeric" : "decimal");
+    els.input.placeholder = q.kind === "number" ? "Type a number" : q.kind === "year" ? "Type a year" : "Type your answer";
+    els.hint.className = "hint";
+    els.hint.textContent = q.kind === "text" ? "Spelling doesn't have to be perfect." : q.kind === "year" ? "The closer the year, the more points." : "Ballparks count. 1.5k and 1500 both work.";
+    els.reveal.hidden = true;
+    els.fill.style.width = "0";
+    paintPips();
+    els.input.focus();
+  }
+
+  function submit(e) {
+    e.preventDefault();
+    if (state.phase !== "ask") return;
+    var q = state.set[state.idx];
+    var raw = els.input.value.trim();
+    if (!raw) { flag("Type an answer to lock it in."); return; }
+    var pts, guess, shown, off = null;
+    if (q.kind === "text") {
+      pts = scoreText(raw, q.a); shown = raw;
+    } else {
+      guess = parseNum(raw);
+      if (guess === null) { flag(q.kind === "year" ? "Type a year, like 1969." : "Type a number, like 250."); return; }
+      if (q.kind === "year") {
+        guess = Math.round(guess); pts = scoreYear(guess, q.a); shown = String(guess);
+        var d = Math.abs(guess - q.a); off = d === 0 ? "Exact" : d + (d === 1 ? " year" : " years");
+      } else {
+        pts = scoreNumber(guess, q.a); shown = fmt(guess);
+        var pct = Math.abs(guess - q.a) / q.a * 100;
+        off = guess === q.a ? "Exact" : (pct < 1 ? pct.toFixed(1) : Math.round(pct)) + "%";
+      }
+    }
+    state.results.push({ q: q, raw: shown, points: pts });
+    state.phase = "reveal";
+    els.input.disabled = true; els.submit.disabled = true;
+    els.hint.textContent = "";
+
+    var b = band(pts);
+    els.verdict.textContent = verdictFor(pts);
+    els.verdict.className = "verdict c-" + b;
+    els.points.innerHTML = pts + " <small>/ 100</small>";
+    els.points.className = "points c-" + b;
+    els.yourAns.textContent = shown;
+    els.realAns.textContent = q.kind === "text" ? q.a[0] : q.kind === "year" ? String(q.a) : fmt(q.a);
+    els.offBox.hidden = off === null;
+    if (off !== null) els.offBy.textContent = off;
+    els.scoreNum.textContent = runningTotal();
+    els.next.textContent = state.idx === ROUNDS - 1 ? "See my score" : "Next question";
+    els.reveal.hidden = false;
+    requestAnimationFrame(function () { requestAnimationFrame(function () { els.fill.style.width = pts + "%"; }); });
+    paintPips();
+    els.next.focus();
+  }
+  function flag(msg) { els.hint.className = "hint err"; els.hint.textContent = msg; els.input.focus(); }
+
+  function next() {
+    if (state.phase !== "reveal") return;
+    state.idx++;
+    if (state.idx >= ROUNDS) finish(); else ask();
+  }
+
+  function finish() {
+    state.phase = "end";
+    var total = runningTotal();
+    var best = parseInt(load("shmeeks.best") || "0", 10);
+    if (total > best) save("shmeeks.best", String(total));
+    if (state.mode === "daily" && !load("shmeeks.daily." + state.day)) save("shmeeks.daily." + state.day, String(total));
+    els.endLabel.textContent = state.mode === "daily" ? "Today's ten · " + state.day : "Random ten";
+    els.total.textContent = total;
+    els.rank.textContent = rankFor(total);
+    els.rounds.innerHTML = "";
+    state.results.forEach(function (r) {
+      var li = document.createElement("li");
+      var dot = document.createElement("span"); dot.className = "dot s-" + band(r.points);
+      var q = document.createElement("span"); q.className = "q"; q.textContent = r.q.q;
+      var sub = document.createElement("span"); sub.className = "sub";
+      sub.textContent = "You: " + r.raw + " · Answer: " + (r.q.kind === "text" ? r.q.a[0] : r.q.kind === "year" ? r.q.a : fmt(r.q.a));
+      q.appendChild(sub);
+      var pts = document.createElement("span"); pts.className = "pts c-" + band(r.points); pts.textContent = r.points;
+      li.appendChild(dot); li.appendChild(q); li.appendChild(pts);
+      els.rounds.appendChild(li);
+    });
+    var squares = { good: "🟩", ok: "🟨", warm: "🟧", miss: "⬛" };
+    els.share.value = "Shmeeks " + (state.mode === "daily" ? state.day : "Random") + " · " + total + "/1000\n" +
+      state.results.map(function (r) { return squares[band(r.points)]; }).join("") + "\n" + rankFor(total);
+    els.copy.textContent = "Copy result";
+    show("end");
+    paintPips();
+  }
+
+  function copyResult() {
+    var text = els.share.value;
+    var done = function () { els.copy.textContent = "Copied"; };
+    var fallback = function () { els.share.focus(); els.share.select(); els.copy.textContent = "Selected. Press Ctrl+C"; };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+      else fallback();
+    } catch (e) { fallback(); }
+  }
+
+  function goHome() { state.phase = "start"; state.results = []; show("start"); renderBest(); paintPips(); }
+
+  // Demo numbers on the start screen come from the real scoring functions.
+  $("demoNum").textContent = scoreNumber(80, 88) + " pts";
+  $("demoYear").textContent = scoreYear(1968, 1969) + " pts";
+  $("demoWord").textContent = scoreText("Kilimanjoro", ["Kilimanjaro"]) + " pts";
+
+  els.form.addEventListener("submit", submit);
+  els.next.addEventListener("click", next);
+  $("playDaily").addEventListener("click", function () { startGame("daily"); });
+  $("playRandom").addEventListener("click", function () { startGame("random"); });
+  $("againDaily").addEventListener("click", function () { startGame("daily"); });
+  $("againRandom").addEventListener("click", function () { startGame("random"); });
+  $("home").addEventListener("click", goHome);
+  els.copy.addEventListener("click", copyResult);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && state.phase === "reveal" && document.activeElement !== els.next) { e.preventDefault(); next(); }
   });
-}
 
-function normalize(value) {
-  return value.toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]/g, "");
-}
-
-function hashDate(value) {
-  let hash = 2166136261;
-  for (const char of value) {
-    hash ^= char.charCodeAt(0);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-}
-
-function shuffled(seed) {
-  const copy = [...bank];
-  let state = seed || 1;
-  function random() {
-    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
-    return state / 4294967296;
-  }
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
-
-function localDateKey() {
-  const d = new Date();
-  return [d.getFullYear(),
-    String(d.getMonth()+1).padStart(2,"0"),
-    String(d.getDate()).padStart(2,"0")
-  ].join("-");
-}
-
-function startGame(selectedMode) {
-  mode = selectedMode;
-  if (mode === "daily" &&
-      localStorage.getItem("shmeeks-" + localDateKey())) {
-    alert("You already completed today's challenge! Try Unlimited Play.");
-    return;
-  }
-  const seed = mode === "daily"
-    ? hashDate(localDateKey())
-    : Math.floor(Math.random() * 4294967295);
-  questions = shuffled(seed).slice(0,7);
-  index = 0;
-  points = 0;
-  history = [];
-  loadQuestion();
-}
-
-function loadQuestion() {
-  locked = false;
-  clearInterval(interval);
-  const q = questions[index];
-  $("count").textContent = `Question ${index+1} / 7`;
-  $("category").textContent = q.category;
-  $("question").textContent = q.question;
-  $("bar").style.width = `${(index/7)*100}%`;
-  $("answer").value = "";
-  $("total").textContent = `Total: ${points} points`;
-  seconds = 20;
-  $("timer").textContent = "20s";
-  $("submitBtn").disabled = false;
-  show("game");
-  $("answer").focus();
-
-  interval = setInterval(() => {
-    seconds--;
-    $("timer").textContent = seconds + "s";
-    if (seconds <= 0) submitAnswer();
-  },1000);
-}
-
-$("answerForm").addEventListener("submit", event => {
-  event.preventDefault();
-  submitAnswer();
-});
-
-function submitAnswer() {
-  if (locked) return;
-  locked = true;
-  clearInterval(interval);
-
-  const q = questions[index];
-  const raw = $("answer").value.trim();
-  const key = normalize(raw);
-  let score = 0;
-
-  for (const [answer, value] of Object.entries(q.answers)) {
-    if (normalize(answer) === key) {
-      score = value;
-      break;
-    }
-  }
-
-  points += score;
-  history.push({
-    category: q.category,
-    answer: raw || "No answer",
-    score
-  });
-
-  $("verdict").textContent = score ? "Accepted" : "Not scored";
-  $("feedbackTitle").textContent =
-    score >= 85 ? "ONE IN A SHMEEK!" :
-    score >= 50 ? "That's uncommon!" :
-    score > 0 ? "Nice answer!" :
-    "No points this round";
-  $("earned").textContent = `+${score}`;
-  $("feedbackText").textContent = score
-    ? `Your answer: ${raw}`
-    : "This prototype only recognizes answers in its curated answer bank.";
-  show("feedback");
-}
-
-function nextQuestion() {
-  index++;
-  if (index >= 7) finishGame();
-  else loadQuestion();
-}
-
-function finishGame() {
-  if (mode === "daily") {
-    localStorage.setItem(
-      "shmeeks-" + localDateKey(),
-      String(points)
-    );
-  }
-  $("finalScore").textContent = points;
-  $("breakdown").innerHTML = history.map(item => `
-    <div class="answer-row">
-      <strong>${item.category}</strong>
-      <span style="float:right">+${item.score}</span>
-      <div class="muted"></div>
-    </div>
-  `).join("");
-  show("results");
-}
-
-function shareScore() {
-  const text = `Shmeeks ${mode === "daily" ? localDateKey() : "Unlimited"}
-${points}/700 points
-${history.map(h => h.score >= 85 ? "🟩" :
-  h.score >= 50 ? "🟨" :
-  h.score > 0 ? "🟧" : "⬛").join("")}
-Think weird. Score big.`;
-  if (navigator.share) {
-    navigator.share({text}).catch(() => {});
-  } else if (navigator.clipboard) {
-    navigator.clipboard.writeText(text)
-      .then(() => alert("Results copied!"))
-      .catch(() => prompt("Copy your results:", text));
-  } else {
-    prompt("Copy your results:", text);
-  }
-}
+  renderBest();
+  paintPips();
+})();
 </script>
 </body>
 </html>
