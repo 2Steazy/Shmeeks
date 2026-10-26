@@ -7,45 +7,77 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon-64.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<meta name="theme-color" content="#0d1554">
+<meta name="theme-color" content="#3ba8cf">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Archivo:wght@500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Ultra&family=Fraunces:ital,opsz,wght@1,9..144,800&family=Jost:wght@500;600;800&display=swap" rel="stylesheet">
 <style>
+/* ---------- 70s poster palette ---------- */
 :root{
-  --blue:#1b2a8f; --blue-deep:#0d1554; --purple:#5b1fa8;
-  --yellow:#ffd23f; --orange:#ff8a1f; --pink:#ff3e8a; --green:#2fd27a; --red:#ff4d4d;
-  --ink:#141414; --paper:#fffaf0; --muted:#6b6b6b;
+  --cream:#f3e8cf; --paper:#fbf3e1; --navy:#173a4f; --sky:#3ba8cf; --sky-2:#56b8db;
+  --orange:#f2901f; --red:#e2472e; --mustard:#f5b738; --olive:#64703c;
+  --ink:var(--navy); --muted:#7b6a52;
+  /* names the game script uses for the timer */
+  --green:var(--sky); --yellow:var(--mustard); --pink:var(--red);
+  --jp-red:#c1121f;
+  --display:"Ultra",Georgia,serif; --script:"Fraunces",Georgia,serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
 body{
-  font-family:"Archivo",system-ui,sans-serif;color:var(--ink);
-  background:var(--blue-deep);
-  min-height:100vh;display:flex;justify-content:center;padding:24px 16px 48px;
+  font-family:"Jost",system-ui,sans-serif;color:var(--ink);font-weight:500;
+  background:var(--cream);
+  min-height:100vh;display:flex;justify-content:center;padding:20px 16px 56px;
   position:relative;overflow-x:hidden;
 }
-/* Game-show sunburst: the rays slowly turn behind everything */
+/* soft sunburst that slowly turns behind the page */
 body::before{
-  content:"";position:fixed;left:50%;top:30vh;width:300vmax;height:300vmax;z-index:-2;
-  translate:-50% -50%;
-  background:repeating-conic-gradient(from 0deg, var(--blue) 0deg 10deg, var(--blue-deep) 10deg 20deg);
-  animation:rays 160s linear infinite;
+  content:"";position:fixed;left:50%;top:22vh;width:300vmax;height:300vmax;z-index:-2;translate:-50% -50%;
+  background:repeating-conic-gradient(from 0deg,#efe0c0 0deg 10deg,var(--cream) 10deg 20deg);
+  animation:rays 200s linear infinite;
 }
+/* printed-paper grain over everything */
 body::after{
-  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background:radial-gradient(circle at 50% 30%, rgba(255,210,63,.20), transparent 55%);
+  content:"";position:fixed;inset:0;z-index:100;pointer-events:none;opacity:.35;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35  0 0 0 0 .28  0 0 0 0 .18  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 @keyframes rays{to{rotate:360deg}}
 .wrap{width:100%;max-width:620px}
-header{text-align:center;margin-bottom:18px}
+
+/* ---------- poster header ---------- */
+header{position:relative;margin-bottom:26px}
+.sky{
+  position:relative;overflow:hidden;text-align:center;
+  background:var(--sky);border:3px solid var(--navy);border-radius:34px;
+  padding:22px 16px 46px;
+}
+.sky::before{ /* rays inside the panel, turning */
+  content:"";position:absolute;left:50%;top:38%;width:240%;aspect-ratio:1;translate:-50% -50%;
+  background:repeating-conic-gradient(from 0deg,var(--sky-2) 0deg 9deg,transparent 9deg 18deg);
+  animation:rays 140s linear infinite;
+}
+.sky::after{ /* halftone dots fading in at the bottom of the panel */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle,rgba(23,58,79,.22) 1.3px,transparent 1.7px) 0 0/7px 7px;
+  -webkit-mask:linear-gradient(to top,#000,transparent 60%);mask:linear-gradient(to top,#000,transparent 60%);
+}
+.sky > *{position:relative;z-index:1}
+.logo{
+  font-family:var(--display);font-weight:400;font-size:clamp(46px,13.5vw,86px);line-height:.95;margin:4px 0 0;
+  color:var(--paper);letter-spacing:1px;
+  text-shadow:3px 3px 0 var(--mustard),6px 6px 0 var(--orange),9px 9px 0 var(--red),12px 12px 0 var(--navy);
+}
+.tagline{font-family:var(--script);font-style:italic;font-weight:800;color:var(--paper);font-size:clamp(17px,4.4vw,22px);margin-top:14px;text-shadow:2px 2px 0 var(--navy)}
+/* swooping stripes under the panel */
+.stripes{display:block;width:100%;height:auto;margin-top:-34px;position:relative;z-index:2}
+
 /* Shmeek coin */
 .coin-logo{
-  position:relative;display:block;width:clamp(96px,26vw,132px);aspect-ratio:1;margin:0 auto -6px;
+  position:relative;display:block;width:clamp(92px,24vw,124px);aspect-ratio:1;margin:0 auto 6px;
   border-radius:50%;animation:float 4.5s ease-in-out infinite;
-  filter:drop-shadow(0 10px 14px rgba(0,0,0,.45)) drop-shadow(0 0 22px rgba(255,200,40,.35));
+  filter:drop-shadow(5px 6px 0 rgba(23,58,79,.55));
 }
 .coin-logo img{width:100%;height:100%;display:block;border-radius:50%}
-.coin-logo::after{  /* shine sweeping across the gold */
+.coin-logo::after{
   content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
   background:linear-gradient(115deg,transparent 38%,rgba(255,250,225,.75) 48%,transparent 58%) no-repeat;
   background-size:250% 100%;background-position:150% 0;mix-blend-mode:soft-light;
@@ -54,135 +86,145 @@ header{text-align:center;margin-bottom:18px}
 @keyframes float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(4deg)}}
 @keyframes shine{0%,60%{background-position:150% 0}100%{background-position:-60% 0}}
 .chip .mini{width:18px;height:18px;vertical-align:-3px;margin-right:6px;border-radius:50%}
-.logo{
-  font-family:"Bungee",sans-serif;font-size:clamp(44px,12vw,76px);line-height:1;margin:0;
-  color:var(--yellow);letter-spacing:2px;
-  text-shadow:3px 3px 0 var(--pink),6px 6px 0 var(--ink);
-  transform:rotate(-3deg);display:inline-block;
-}
-.tagline{color:#fff;font-weight:900;letter-spacing:3px;text-transform:uppercase;font-size:13px;margin-top:12px;opacity:.9}
+
+/* ---------- cards & controls ---------- */
 .card{
-  background:var(--paper);border:4px solid var(--ink);border-radius:18px;
-  box-shadow:8px 8px 0 var(--ink);padding:24px;position:relative;
+  background:var(--paper);border:3px solid var(--navy);border-radius:26px;padding:24px;position:relative;
+  box-shadow:6px 6px 0 var(--red),12px 12px 0 var(--mustard);
 }
-.bulbs{position:absolute;inset:-4px;border-radius:18px;pointer-events:none;
-  background:
-    radial-gradient(circle,var(--yellow) 3px,transparent 4px) 0 0/22px 22px repeat-x,
-    radial-gradient(circle,var(--yellow) 3px,transparent 4px) 0 100%/22px 22px repeat-x;
-  opacity:.0}
-h2{font-family:"Bungee",sans-serif;font-weight:400;margin:0 0 10px;font-size:22px}
-p{line-height:1.5}
+h2{font-family:var(--display);font-weight:400;margin:0 0 10px;font-size:24px;color:var(--navy)}
+p{line-height:1.55}
+b{font-weight:800}
 .btn{
-  font-family:"Bungee",sans-serif;font-size:18px;letter-spacing:1px;
-  background:var(--yellow);color:var(--ink);border:3px solid var(--ink);border-radius:12px;
-  padding:14px 22px;cursor:pointer;box-shadow:4px 4px 0 var(--ink);transition:transform .08s, box-shadow .08s;
+  font-family:var(--display);font-weight:400;font-size:18px;letter-spacing:.5px;
+  background:var(--orange);color:var(--paper);border:3px solid var(--navy);border-radius:999px;
+  padding:14px 22px;cursor:pointer;box-shadow:4px 4px 0 var(--navy);transition:transform .08s,box-shadow .08s;
+  text-shadow:1px 1px 0 var(--navy);
 }
-.btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--ink)}
-.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
-.btn.alt{background:#fff}
-.btn.pink{background:var(--pink);color:#fff}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--navy)}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--navy)}
+.btn.alt{background:var(--paper);color:var(--navy);text-shadow:none}
+.btn.pink{background:var(--red)}
 .btn.block{width:100%}
 .row{display:flex;gap:12px;flex-wrap:wrap}
 .row .btn{flex:1}
 .ladder{list-style:none;padding:0;margin:14px 0 18px;display:grid;gap:6px}
 .ladder li{
   display:flex;justify-content:space-between;align-items:center;gap:10px;
-  border:3px solid var(--ink);border-radius:10px;padding:8px 12px;font-weight:900;
+  border:3px solid var(--navy);border-radius:999px;padding:7px 16px;font-weight:800;
 }
-.ladder .tier-name{font-family:"Bungee",sans-serif;font-weight:400;font-size:14px}
-.ladder .ex{font-weight:700;font-size:13px;color:#333;flex:1;text-align:right}
-.ladder .pts{font-family:"Bungee",sans-serif;font-weight:400;min-width:64px;text-align:right}
-.ladder li.hit{outline:4px solid var(--ink);transform:scale(1.03);box-shadow:4px 4px 0 var(--ink)}
+.ladder .tier-name{font-family:var(--display);font-weight:400;font-size:14px;letter-spacing:.5px}
+.ladder .ex{font-weight:600;font-size:13px;color:#3d3326;flex:1;text-align:right}
+.ladder .pts{font-family:var(--display);font-weight:400;min-width:60px;text-align:right}
+.ladder li.hit{outline:3px solid var(--navy);outline-offset:2px;transform:scale(1.03);box-shadow:4px 4px 0 var(--navy)}
 .ladder li.dim{opacity:.45}
 .ladder li.jp{border-color:var(--jp-red);box-shadow:inset 0 0 0 2px #fff3a0}
-.ladder li.jp.hit{outline:4px solid var(--jp-red);background-size:300% 100% !important;animation:shimmer 2.2s linear infinite, glow 1s ease-in-out infinite alternate}
+.ladder li.jp.hit{outline:4px solid var(--jp-red);background-size:300% 100% !important;animation:shimmer 2.2s linear infinite,glow 1s ease-in-out infinite alternate}
 
 /* ----- Jackpot! ----- */
-:root{--jp-red:#c1121f}
 .reveal-banner{position:relative;overflow:hidden}
 .reveal-banner > *{position:relative;z-index:1}
 .reveal-banner.jackpot{
   background-size:300% 100% !important;border:5px solid var(--jp-red);
   box-shadow:0 0 0 4px #ffd700,0 0 0 9px var(--jp-red),0 0 34px 12px rgba(255,200,0,.65);
-  animation:pop .5s cubic-bezier(.2,1.6,.4,1), shimmer 2.2s linear infinite, glow 1s ease-in-out .5s infinite alternate;
+  animation:pop .5s cubic-bezier(.2,1.6,.4,1),shimmer 2.2s linear infinite,glow 1s ease-in-out .5s infinite alternate;
   margin:10px 6px 22px;
 }
 .reveal-banner.jackpot::before{
   content:"";position:absolute;left:50%;top:50%;width:260%;aspect-ratio:1;translate:-50% -50%;z-index:0;
-  background:repeating-conic-gradient(rgba(193,18,31,.22) 0deg 9deg, transparent 9deg 18deg);
+  background:repeating-conic-gradient(rgba(193,18,31,.22) 0deg 9deg,transparent 9deg 18deg);
   animation:spin 9s linear infinite;
 }
-.reveal-banner.jackpot .t{color:var(--jp-red);text-shadow:2px 2px 0 #fff6b0,4px 4px 0 var(--ink);animation:bounce .8s ease-in-out .5s infinite alternate}
-.reveal-banner.jackpot .p{color:var(--ink);text-shadow:1px 1px 0 #fff6b0}
+.reveal-banner.jackpot .t{color:var(--jp-red);text-shadow:2px 2px 0 #fff6b0,4px 4px 0 var(--navy);animation:bounce .8s ease-in-out .5s infinite alternate}
+.reveal-banner.jackpot .p{color:var(--navy);text-shadow:1px 1px 0 #fff6b0}
 @keyframes shimmer{from{background-position:0% 50%}to{background-position:300% 50%}}
 @keyframes glow{from{filter:brightness(1)}to{filter:brightness(1.18) saturate(1.2)}}
 @keyframes spin{to{rotate:360deg}}
 @keyframes bounce{from{transform:scale(1)}to{transform:scale(1.08)}}
-.coin{position:fixed;z-index:50;pointer-events:none;font-size:26px;left:0;top:0;
-  animation:burst 1.5s cubic-bezier(.15,.7,.3,1) forwards}
+.coin{position:fixed;z-index:50;pointer-events:none;font-size:26px;left:0;top:0;animation:burst 1.5s cubic-bezier(.15,.7,.3,1) forwards}
 @keyframes burst{
   0%{transform:translate(var(--x0),var(--y0)) scale(.3) rotate(0);opacity:1}
   70%{opacity:1}
   100%{transform:translate(calc(var(--x0) + var(--dx)),calc(var(--y0) + var(--dy))) scale(1) rotate(var(--r));opacity:0}
 }
 .coin-img{width:30px;height:30px;display:block;border-radius:50%;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
-@media (prefers-reduced-motion:reduce){
-  body::before,.coin-logo,.coin-logo::after{animation:none}
-  .reveal-banner.jackpot,.reveal-banner.jackpot::before,.reveal-banner.jackpot .t,.ladder li.jp.hit{animation:none}
-  .coin{display:none}
-}
-.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;color:#fff;font-weight:900}
-.chip{background:var(--pink);color:#fff;border:3px solid var(--ink);border-radius:999px;padding:4px 12px;font-family:"Bungee",sans-serif;font-size:14px;box-shadow:3px 3px 0 var(--ink)}
-.chip.y{background:var(--yellow);color:var(--ink)}
-.cat{display:inline-block;background:var(--blue);color:#fff;font-weight:900;font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border-radius:6px;margin-bottom:10px}
-.question{font-family:"Bungee",sans-serif;font-size:clamp(22px,5.5vw,30px);line-height:1.2;margin:0 0 18px}
-.timer{height:16px;border:3px solid var(--ink);border-radius:999px;overflow:hidden;background:#fff;margin-bottom:6px}
+
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.chip{background:var(--sky);color:var(--paper);border:3px solid var(--navy);border-radius:999px;padding:5px 14px;font-family:var(--display);font-size:14px;box-shadow:3px 3px 0 var(--navy);text-shadow:1px 1px 0 var(--navy)}
+.chip.y{background:var(--mustard);color:var(--navy);text-shadow:none}
+.cat{display:inline-block;background:var(--navy);color:var(--paper);font-weight:800;font-size:12px;letter-spacing:3px;text-transform:uppercase;padding:5px 12px;border-radius:999px;margin-bottom:12px}
+.question{font-family:var(--display);font-weight:400;font-size:clamp(23px,5.6vw,31px);line-height:1.18;margin:0 0 18px;color:var(--navy)}
+.timer{height:16px;border:3px solid var(--navy);border-radius:999px;overflow:hidden;background:var(--cream);margin-bottom:6px}
 .timer > div{height:100%;width:100%;background:var(--green);transition:background .3s}
-.timer-label{display:flex;justify-content:space-between;font-weight:900;font-size:14px;margin-bottom:16px}
+.timer-label{display:flex;justify-content:space-between;font-weight:800;font-size:14px;margin-bottom:16px;letter-spacing:1px;text-transform:uppercase}
 .tag{
-  position:relative;display:flex;align-items:center;background:#fff;border:4px solid var(--ink);
-  border-radius:14px 40px 40px 14px;padding:4px 6px 4px 18px;box-shadow:4px 4px 0 var(--ink);margin-bottom:16px;
+  position:relative;display:flex;align-items:center;background:#fffaf0;border:3px solid var(--navy);
+  border-radius:14px 40px 40px 14px;padding:4px 6px 4px 18px;box-shadow:4px 4px 0 var(--orange);margin-bottom:16px;
 }
-.tag::after{content:"";position:absolute;right:16px;top:50%;width:12px;height:12px;margin-top:-6px;border:3px solid var(--ink);border-radius:50%;background:var(--paper)}
-.tag input{
-  flex:1;min-width:0;border:0;outline:0;background:transparent;font:900 22px "Archivo",sans-serif;
-  padding:12px 40px 12px 0;color:var(--ink);
-}
+.tag::after{content:"";position:absolute;right:16px;top:50%;width:12px;height:12px;margin-top:-6px;border:3px solid var(--navy);border-radius:50%;background:var(--cream)}
+.tag input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:800 22px "Jost",sans-serif;padding:12px 40px 12px 0;color:var(--navy)}
+.tag input::placeholder{color:#a8977a}
 .reveal-banner{
-  text-align:center;border:4px solid var(--ink);border-radius:14px;padding:16px;margin-bottom:16px;
-  box-shadow:5px 5px 0 var(--ink);animation:pop .45s cubic-bezier(.2,1.6,.4,1);
+  text-align:center;border:3px solid var(--navy);border-radius:22px;padding:16px;margin-bottom:16px;
+  box-shadow:5px 5px 0 var(--navy);animation:pop .45s cubic-bezier(.2,1.6,.4,1);
 }
-.reveal-banner .t{font-family:"Bungee",sans-serif;font-size:clamp(28px,8vw,42px);line-height:1}
-.reveal-banner .p{font-family:"Bungee",sans-serif;font-size:22px;margin-top:6px}
+.reveal-banner .t{font-family:var(--display);font-size:clamp(28px,8vw,42px);line-height:1;color:var(--navy)}
+.reveal-banner .p{font-family:var(--display);font-size:22px;margin-top:6px;color:var(--navy)}
 @keyframes pop{from{transform:scale(.4) rotate(-6deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
-.yours{font-weight:700;margin:0 0 4px}
-.yours b{font-weight:900}
-.fact{background:#fff3c4;border:3px dashed var(--ink);border-radius:10px;padding:12px 14px;margin:12px 0 16px;font-weight:500}
-.total{font-family:"Bungee",sans-serif;font-size:clamp(48px,14vw,72px);text-align:center;line-height:1;margin:8px 0 2px;color:var(--pink);text-shadow:3px 3px 0 var(--ink)}
-.of{text-align:center;font-weight:900;color:var(--muted);margin-bottom:10px}
-.rank{text-align:center;font-family:"Bungee",sans-serif;font-size:20px;margin-bottom:8px}
+.yours{font-weight:600;margin:0 0 4px}
+.yours b{font-weight:800}
+.fact{background:#fbe5b6;border:3px dashed var(--navy);border-radius:18px;padding:12px 16px;margin:12px 0 16px;font-weight:500}
+.total{font-family:var(--display);font-size:clamp(52px,15vw,78px);text-align:center;line-height:1;margin:8px 0 6px;color:var(--red);text-shadow:3px 3px 0 var(--mustard),6px 6px 0 var(--navy)}
+.of{text-align:center;font-weight:800;color:var(--muted);margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;font-size:13px}
+.rank{text-align:center;font-family:var(--script);font-style:italic;font-weight:800;font-size:24px;margin-bottom:8px;color:var(--sky);text-shadow:1px 1px 0 var(--navy)}
 .emojis{text-align:center;font-size:30px;letter-spacing:4px;margin:6px 0 16px}
 .summary{list-style:none;padding:0;margin:0 0 18px;display:grid;gap:6px}
-.summary li{display:flex;gap:10px;align-items:center;border-bottom:2px dotted #ccc;padding:6px 0;font-size:14px}
+.summary li{display:flex;gap:10px;align-items:center;border-bottom:2px dotted #cdbb98;padding:6px 0;font-size:14px}
 .summary li span:nth-child(2){flex:1}
 .summary small{color:var(--muted);display:block}
-.summary .sp{font-family:"Bungee",sans-serif}
+.summary .sp{font-family:var(--display)}
 .note{font-size:13px;color:var(--muted);text-align:center;margin-top:12px}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;font-weight:900;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:var(--paper);padding:10px 18px;border-radius:999px;font-weight:800;opacity:0;transition:opacity .2s;pointer-events:none;z-index:120}
 .toast.show{opacity:1}
 .shake{animation:shake .35s}
 @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+footer{text-align:center;margin-top:34px;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--sky)}
 @media (max-width:420px){.card{padding:18px}.ladder .ex{display:none}}
+@media (prefers-reduced-motion:reduce){
+  body::before,.sky::before,.coin-logo,.coin-logo::after{animation:none}
+  .reveal-banner.jackpot,.reveal-banner.jackpot::before,.reveal-banner.jackpot .t,.ladder li.jp.hit{animation:none}
+  .coin{display:none}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div class="coin-logo"><img src="assets/coin.webp" alt="" width="288" height="288"></div>
-    <h1 class="logo">SHMEEKS</h1>
-    <div class="tagline">Name the priciest. Win big.</div>
+    <div class="sky">
+      <div class="coin-logo"><img src="assets/coin.webp" alt="" width="288" height="288"></div>
+      <h1 class="logo">SHMEEKS</h1>
+      <div class="tagline">Name the priciest, kid.</div>
+    </div>
+    <svg class="stripes" viewBox="0 0 600 142" aria-hidden="true" preserveAspectRatio="none">
+      <defs>
+        <pattern id="dots" width="6" height="6" patternUnits="userSpaceOnUse">
+          <circle cx="3" cy="3" r="1.25" fill="#173a4f" opacity=".28"/>
+        </pattern>
+      </defs>
+      <g fill="none" stroke-width="15">
+        <path d="M-10 16 C140 16 190 88 320 88 S500 34 610 34" stroke="#173a4f"/>
+        <path d="M-10 31 C140 31 190 103 320 103 S500 49 610 49" stroke="#e2472e"/>
+        <path d="M-10 46 C140 46 190 118 320 118 S500 64 610 64" stroke="#f2901f"/>
+        <path d="M-10 61 C140 61 190 133 320 133 S500 79 610 79" stroke="#f5b738"/>
+        <g stroke="url(#dots)">
+          <path d="M-10 31 C140 31 190 103 320 103 S500 49 610 49"/>
+          <path d="M-10 61 C140 61 190 133 320 133 S500 79 610 79"/>
+        </g>
+      </g>
+    </svg>
   </header>
   <main id="app"></main>
+  <footer>Shmeeks · A game of expensive taste</footer>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -197,7 +239,7 @@ const TIERS = [
   {name:"BARGAIN BIN", pts:50,   emoji:"🪙", color:"linear-gradient(135deg,#f3e9c6,#e2cf98)"},
   {name:"CLEARANCE",   pts:10,   emoji:"🏷️", color:"linear-gradient(135deg,#f6f1e2,#e8dec2)"},
 ];
-const MISS = {name:"NO SALE", pts:0, emoji:"⬛", color:"#bdbdbd"};
+const MISS = {name:"NO SALE", pts:0, emoji:"⬛", color:"#d9ccb0"};
 const ROUND_LEN = 7, TIME_LIMIT = 30;
 
 /* ---------- Question bank ----------
