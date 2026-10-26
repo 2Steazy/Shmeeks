@@ -9,7 +9,9 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <meta name="theme-color" content="#3ba8cf">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Ultra&family=Shrikhand&family=Fraunces:ital,opsz,wght@1,9..144,800&family=Jost:wght@500;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Ultra&family=Fraunces:ital,opsz,wght@1,9..144,800&family=Jost:wght@500;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Titan+One&display=swap" rel="stylesheet">
 <style>
 /* ---------- 70s poster palette ---------- */
 :root{
@@ -62,10 +64,21 @@ header{position:relative;margin-bottom:26px}
 }
 .sky > *{position:relative;z-index:1}
 .logo{
-  font-family:"Shrikhand",var(--display);font-weight:400;font-size:clamp(50px,14.5vw,92px);line-height:1;margin:2px 0 0;
-  color:var(--paper);letter-spacing:0;padding:0 .08em; /* room for the slanted swashes */
+  font-family:"Bagel Fat One","Titan One",var(--display);font-weight:400;font-size:clamp(52px,15vw,96px);line-height:1;
+  margin:6px 0 4px;color:var(--paper);letter-spacing:-.01em;
+  display:inline-flex;transform:rotate(-5deg) skewX(-7deg);
   text-shadow:3px 3px 0 var(--mustard),6px 6px 0 var(--orange),9px 9px 0 var(--red),12px 12px 0 var(--navy);
 }
+/* each letter tilts and bobs on its own, so the word bounces */
+.logo span{display:inline-block;transform:translateY(var(--y)) rotate(var(--r));animation:bob 3.6s ease-in-out infinite;animation-delay:var(--d)}
+.logo span:nth-child(1){--r:-9deg;--y:.04em;--d:0s}
+.logo span:nth-child(2){--r:6deg;--y:-.07em;--d:.12s}
+.logo span:nth-child(3){--r:-4deg;--y:.03em;--d:.24s}
+.logo span:nth-child(4){--r:8deg;--y:-.08em;--d:.36s}
+.logo span:nth-child(5){--r:-6deg;--y:.02em;--d:.48s}
+.logo span:nth-child(6){--r:5deg;--y:-.06em;--d:.60s}
+.logo span:nth-child(7){--r:-10deg;--y:.05em;--d:.72s}
+@keyframes bob{0%,100%{transform:translateY(var(--y)) rotate(var(--r))}50%{transform:translateY(calc(var(--y) - .07em)) rotate(calc(var(--r) * -.4))}}
 .tagline{font-family:var(--script);font-style:italic;font-weight:800;color:var(--paper);font-size:clamp(17px,4.4vw,22px);margin-top:14px;text-shadow:2px 2px 0 var(--navy)}
 /* swooping stripes under the panel */
 .stripes{display:block;width:100%;height:auto;margin-top:-34px;position:relative;z-index:2}
@@ -191,7 +204,7 @@ b{font-weight:800}
 footer{text-align:center;margin-top:34px;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--sky)}
 @media (max-width:420px){.card{padding:18px}.ladder .ex{display:none}}
 @media (prefers-reduced-motion:reduce){
-  body::before,.sky::before,.coin-logo,.coin-logo::after{animation:none}
+  body::before,.sky::before,.coin-logo,.coin-logo::after,.logo span{animation:none}
   .reveal-banner.jackpot,.reveal-banner.jackpot::before,.reveal-banner.jackpot .t,.ladder li.jp.hit{animation:none}
   .coin{display:none}
 }
@@ -202,8 +215,8 @@ footer{text-align:center;margin-top:34px;font-size:11px;font-weight:800;letter-s
   <header>
     <div class="sky">
       <div class="coin-logo"><img src="assets/coin.webp" alt="" width="288" height="288"></div>
-      <h1 class="logo">SHMEEKS</h1>
-      <div class="tagline">Name the priciest, kid.</div>
+      <h1 class="logo" aria-label="Shmeeks"><span aria-hidden="true">S</span><span aria-hidden="true">H</span><span aria-hidden="true">M</span><span aria-hidden="true">E</span><span aria-hidden="true">E</span><span aria-hidden="true">K</span><span aria-hidden="true">S</span></h1>
+      <div class="tagline">In Shmeek We Trust</div>
     </div>
     <svg class="stripes" viewBox="0 0 600 142" aria-hidden="true" preserveAspectRatio="none">
       <defs>
