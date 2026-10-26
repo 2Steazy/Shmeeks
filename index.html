@@ -1,0 +1,551 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shmeeks — Think Different</title>
+<style>
+:root {
+  --bg: #f8f5ed;
+  --ink: #24251f;
+  --green: #b9e9b0;
+  --orange: #ffb87e;
+  --border: #24251f;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Arial, Helvetica, sans-serif;
+}
+header {
+  padding: 22px 7%;
+  border-bottom: 2px solid var(--ink);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.logo {
+  font-size: 27px;
+  font-weight: 900;
+  letter-spacing: -1.5px;
+}
+.logo span { color: #579d58; }
+main {
+  max-width: 640px;
+  margin: auto;
+  padding: 55px 22px;
+  text-align: center;
+}
+h1 {
+  font-size: clamp(45px, 10vw, 78px);
+  letter-spacing: -4px;
+  line-height: 1;
+  margin: 12px 0 20px;
+}
+h2 { font-size: 31px; }
+p { line-height: 1.6; }
+.muted { color: #74756c; }
+.tag {
+  display: inline-block;
+  background: var(--green);
+  border: 2px solid var(--ink);
+  padding: 8px 15px;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+button {
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 17px 25px;
+  background: var(--green);
+  color: var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  transition: .15s;
+}
+button:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.secondary { background: white; }
+.actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 32px;
+}
+.card {
+  background: white;
+  border: 2px solid var(--ink);
+  border-radius: 20px;
+  box-shadow: 6px 6px 0 var(--ink);
+  padding: 32px 25px;
+  margin: 30px 0;
+}
+input {
+  display: block;
+  width: 100%;
+  padding: 18px;
+  font-size: 20px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  outline: none;
+  margin: 25px 0 18px;
+}
+input:focus { border-color: #579d58; }
+.progress {
+  height: 12px;
+  background: #e2e1d8;
+  border: 2px solid var(--ink);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.progress > div {
+  height: 100%;
+  background: #80c87a;
+  transition: width .2s;
+}
+.topline {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0;
+  font-weight: bold;
+}
+.score {
+  font-size: 78px;
+  font-weight: 900;
+  letter-spacing: -4px;
+}
+.answer-row {
+  padding: 13px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+.hidden { display: none; }
+footer {
+  text-align: center;
+  padding: 30px;
+  color: #888;
+  font-size: 12px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">shmeek<span>s.</span></div>
+  <span class="tag">The uncommon answer game</span>
+</header>
+
+<main>
+<section id="home">
+  <div class="tag">A little weird is good</div>
+  <h1>Think outside<br>the obvious.</h1>
+  <p class="muted">
+    Seven questions. Twenty seconds each.
+    The more unusual your correct answers,
+    the more points you earn.
+  </p>
+  <div class="actions">
+    <button onclick="startGame('daily')">Daily Shmeeks</button>
+    <button class="secondary" onclick="startGame('unlimited')">
+      Unlimited Play
+    </button>
+  </div>
+  <div class="card">
+    <h2>How to play</h2>
+    <p>1. Read the question.</p>
+    <p>2. Think of a correct, uncommon answer.</p>
+    <p>3. Submit before time runs out.</p>
+    <p>4. Collect points and become a Shmeek.</p>
+  </div>
+</section>
+
+<section id="game" class="hidden">
+  <div class="topline">
+    <span id="count">Question 1 / 7</span>
+    <span id="timer">20s</span>
+  </div>
+  <div class="progress"><div id="bar"></div></div>
+  <div class="card">
+    <span class="tag" id="category">Category</span>
+    <h2 id="question"></h2>
+    <form id="answerForm">
+      <input id="answer" autocomplete="off"
+        placeholder="Your uncommon answer..."
+        maxlength="100" required>
+      <button type="submit" id="submitBtn">
+        Lock in answer
+      </button>
+    </form>
+  </div>
+  <p class="muted" id="total">Total: 0 points</p>
+</section>
+
+<section id="feedback" class="hidden">
+  <div class="card">
+    <div class="tag" id="verdict"></div>
+    <h2 id="feedbackTitle"></h2>
+    <div class="score" id="earned"></div>
+    <p id="feedbackText"></p>
+    <button onclick="nextQuestion()">Continue</button>
+  </div>
+</section>
+
+<section id="results" class="hidden">
+  <span class="tag">Challenge complete</span>
+  <h1>Well played,<br>Shmeek.</h1>
+  <p>Your final score</p>
+  <div class="score" id="finalScore"></div>
+  <p class="muted">Out of 700 possible points</p>
+  <div class="card" id="breakdown"></div>
+  <div class="actions">
+    <button onclick="shareScore()">Share results</button>
+    <button class="secondary" onclick="startGame('unlimited')">
+      Play again
+    </button>
+  </div>
+</section>
+</main>
+
+<footer>© Shmeeks — Think weird. Score big.</footer>
+
+<script>
+const bank = [
+  {
+    category: "Animals",
+    question: "Name an animal that lays eggs.",
+    answers: {
+      chicken: 10, duck: 15, turtle: 25,
+      snake: 30, crocodile: 45,
+      platypus: 85, echidna: 100
+    }
+  },
+  {
+    category: "Geography",
+    question: "Name a country in Africa.",
+    answers: {
+      egypt: 10, nigeria: 15, kenya: 20,
+      morocco: 25, ghana: 35,
+      botswana: 60, lesotho: 85,
+      eswatini: 100
+    }
+  },
+  {
+    category: "Science",
+    question: "Name a chemical element.",
+    answers: {
+      oxygen: 5, hydrogen: 10, gold: 15,
+      carbon: 20, iron: 25,
+      tungsten: 55, osmium: 85,
+      promethium: 100
+    }
+  },
+  {
+    category: "Food",
+    question: "Name a type of pasta.",
+    answers: {
+      spaghetti: 5, penne: 10,
+      ravioli: 15, linguine: 20,
+      rigatoni: 30, orzo: 45,
+      orecchiette: 80, trofie: 100
+    }
+  },
+  {
+    category: "History",
+    question: "Name an ancient civilization.",
+    answers: {
+      roman: 10, egyptian: 15,
+      greek: 20, maya: 30,
+      inca: 35, sumerian: 65,
+      minoan: 85, olmec: 100
+    }
+  },
+  {
+    category: "Nature",
+    question: "Name a type of cloud.",
+    answers: {
+      cumulus: 10, cirrus: 20,
+      stratus: 25, cumulonimbus: 45,
+      altocumulus: 60,
+      mammatus: 85,
+      noctilucent: 100
+    }
+  },
+  {
+    category: "Music",
+    question: "Name a musical instrument.",
+    answers: {
+      guitar: 5, piano: 5, drums: 10,
+      violin: 15, trumpet: 20,
+      oboe: 50, theremin: 85,
+      nyckelharpa: 100
+    }
+  },
+  {
+    category: "Space",
+    question: "Name a moon in our solar system.",
+    answers: {
+      moon: 5, titan: 30, europa: 35,
+      io: 40, ganymede: 45,
+      enceladus: 65, triton: 75,
+      miranda: 100
+    }
+  },
+  {
+    category: "Sports",
+    question: "Name an Olympic sport.",
+    answers: {
+      swimming: 5, athletics: 10,
+      gymnastics: 15, basketball: 20,
+      fencing: 45, rowing: 50,
+      modernpentathlon: 90,
+      breaking: 100
+    }
+  },
+  {
+    category: "Gaming",
+    question: "Name a video game franchise.",
+    answers: {
+      mario: 5, pokemon: 10,
+      minecraft: 10, zelda: 20,
+      halo: 25, metroid: 50,
+      pikmin: 70, katamari: 100
+    }
+  },
+  {
+    category: "Plants",
+    question: "Name a carnivorous plant.",
+    answers: {
+      venusflytrap: 10,
+      pitcherplant: 35,
+      sundew: 65,
+      butterwort: 85,
+      bladderwort: 100
+    }
+  },
+  {
+    category: "Languages",
+    question: "Name a language spoken in Europe.",
+    answers: {
+      english: 5, french: 10,
+      spanish: 10, german: 15,
+      italian: 20, polish: 35,
+      basque: 80, romansh: 100
+    }
+  },
+  {
+    category: "Ocean",
+    question: "Name an animal that lives in the deep sea.",
+    answers: {
+      shark: 10, squid: 20,
+      anglerfish: 45, gulper eel: 70,
+      barreleye: 85, dumbo octopus: 100
+    }
+  },
+  {
+    category: "Art",
+    question: "Name a famous painter.",
+    answers: {
+      picasso: 5, vangogh: 10,
+      monet: 15, rembrandt: 20,
+      caravaggio: 45, klimt: 50,
+      hilmaafklint: 90, arcimboldo: 100
+    }
+  }
+];
+
+let questions = [];
+let index = 0;
+let points = 0;
+let history = [];
+let seconds = 20;
+let interval;
+let mode = "daily";
+let locked = false;
+
+const $ = id => document.getElementById(id);
+
+function show(id) {
+  ["home","game","feedback","results"].forEach(name => {
+    $(name).classList.toggle("hidden", name !== id);
+  });
+}
+
+function normalize(value) {
+  return value.toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function hashDate(value) {
+  let hash = 2166136261;
+  for (const char of value) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function shuffled(seed) {
+  const copy = [...bank];
+  let state = seed || 1;
+  function random() {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state / 4294967296;
+  }
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function localDateKey() {
+  const d = new Date();
+  return [d.getFullYear(),
+    String(d.getMonth()+1).padStart(2,"0"),
+    String(d.getDate()).padStart(2,"0")
+  ].join("-");
+}
+
+function startGame(selectedMode) {
+  mode = selectedMode;
+  if (mode === "daily" &&
+      localStorage.getItem("shmeeks-" + localDateKey())) {
+    alert("You already completed today's challenge! Try Unlimited Play.");
+    return;
+  }
+  const seed = mode === "daily"
+    ? hashDate(localDateKey())
+    : Math.floor(Math.random() * 4294967295);
+  questions = shuffled(seed).slice(0,7);
+  index = 0;
+  points = 0;
+  history = [];
+  loadQuestion();
+}
+
+function loadQuestion() {
+  locked = false;
+  clearInterval(interval);
+  const q = questions[index];
+  $("count").textContent = `Question ${index+1} / 7`;
+  $("category").textContent = q.category;
+  $("question").textContent = q.question;
+  $("bar").style.width = `${(index/7)*100}%`;
+  $("answer").value = "";
+  $("total").textContent = `Total: ${points} points`;
+  seconds = 20;
+  $("timer").textContent = "20s";
+  $("submitBtn").disabled = false;
+  show("game");
+  $("answer").focus();
+
+  interval = setInterval(() => {
+    seconds--;
+    $("timer").textContent = seconds + "s";
+    if (seconds <= 0) submitAnswer();
+  },1000);
+}
+
+$("answerForm").addEventListener("submit", event => {
+  event.preventDefault();
+  submitAnswer();
+});
+
+function submitAnswer() {
+  if (locked) return;
+  locked = true;
+  clearInterval(interval);
+
+  const q = questions[index];
+  const raw = $("answer").value.trim();
+  const key = normalize(raw);
+  let score = 0;
+
+  for (const [answer, value] of Object.entries(q.answers)) {
+    if (normalize(answer) === key) {
+      score = value;
+      break;
+    }
+  }
+
+  points += score;
+  history.push({
+    category: q.category,
+    answer: raw || "No answer",
+    score
+  });
+
+  $("verdict").textContent = score ? "Accepted" : "Not scored";
+  $("feedbackTitle").textContent =
+    score >= 85 ? "ONE IN A SHMEEK!" :
+    score >= 50 ? "That's uncommon!" :
+    score > 0 ? "Nice answer!" :
+    "No points this round";
+  $("earned").textContent = `+${score}`;
+  $("feedbackText").textContent = score
+    ? `Your answer: ${raw}`
+    : "This prototype only recognizes answers in its curated answer bank.";
+  show("feedback");
+}
+
+function nextQuestion() {
+  index++;
+  if (index >= 7) finishGame();
+  else loadQuestion();
+}
+
+function finishGame() {
+  if (mode === "daily") {
+    localStorage.setItem(
+      "shmeeks-" + localDateKey(),
+      String(points)
+    );
+  }
+  $("finalScore").textContent = points;
+  $("breakdown").innerHTML = history.map(item => `
+    <div class="answer-row">
+      <strong>${item.category}</strong>
+      <span style="float:right">+${item.score}</span>
+      <div class="muted"></div>
+    </div>
+  `).join("");
+  show("results");
+}
+
+function shareScore() {
+  const text = `Shmeeks ${mode === "daily" ? localDateKey() : "Unlimited"}
+${points}/700 points
+${history.map(h => h.score >= 85 ? "🟩" :
+  h.score >= 50 ? "🟨" :
+  h.score > 0 ? "🟧" : "⬛").join("")}
+Think weird. Score big.`;
+  if (navigator.share) {
+    navigator.share({text}).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text)
+      .then(() => alert("Results copied!"))
+      .catch(() => prompt("Copy your results:", text));
+  } else {
+    prompt("Copy your results:", text);
+  }
+}
+</script>
+</body>
+</html>
