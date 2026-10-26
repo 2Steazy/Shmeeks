@@ -45,24 +45,70 @@ body::after{
 @keyframes rays{to{rotate:360deg}}
 .wrap{width:100%;max-width:620px}
 
-/* ---------- poster header ---------- */
+/* ---------- poster header: retro sunset ---------- */
 header{position:relative;margin-bottom:26px}
-.sky{
-  position:relative;overflow:hidden;text-align:center;
-  background:var(--sky);border:3px solid var(--navy);border-radius:34px;
-  padding:22px 16px 46px;
-}
-.sky::before{ /* rays inside the panel, turning */
-  content:"";position:absolute;left:50%;top:38%;width:240%;aspect-ratio:1;translate:-50% -50%;
-  background:repeating-conic-gradient(from 0deg,var(--sky-2) 0deg 9deg,transparent 9deg 18deg);
-  animation:rays 140s linear infinite;
-}
-.sky::after{ /* halftone dots fading in at the bottom of the panel */
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(circle,rgba(23,58,79,.22) 1.3px,transparent 1.7px) 0 0/7px 7px;
-  -webkit-mask:linear-gradient(to top,#000,transparent 60%);mask:linear-gradient(to top,#000,transparent 60%);
-}
+.sky{position:relative;overflow:hidden;text-align:center;border:3px solid var(--navy);border-radius:34px;background:var(--sea)}
+:root{--sea:#2f9cc6;--sea-deep:#1f6f93}
 .sky > *{position:relative;z-index:1}
+/* the sky: hard 70s colour bands down to the horizon */
+.scene{
+  position:relative;height:clamp(150px,36vw,205px);overflow:hidden;z-index:0;
+  background:linear-gradient(to bottom,
+    var(--navy) 0 20%, #7d2f3f 20% 36%, var(--red) 36% 53%, var(--orange) 53% 70%,
+    var(--mustard) 70% 86%, #f8d27c 86% 100%);
+}
+.scene::before{ /* sun rays turning around the coin */
+  content:"";position:absolute;left:50%;top:100%;width:300%;aspect-ratio:1;translate:-50% -50%;
+  background:repeating-conic-gradient(from 0deg,rgba(255,236,170,.20) 0deg 7deg,transparent 7deg 14deg);
+  animation:rays 120s linear infinite;
+}
+.scene::after{ /* halftone dots fading down from the top of the sky */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle,rgba(251,243,225,.22) 1.2px,transparent 1.6px) 0 0/7px 7px;
+  -webkit-mask:linear-gradient(to bottom,#000,transparent 45%);mask:linear-gradient(to bottom,#000,transparent 45%);
+}
+/* the coin is the sun, half sunk below the horizon, cut by sunset stripes */
+.sun{
+  position:absolute;left:50%;bottom:0;width:clamp(150px,40vw,214px);aspect-ratio:1;z-index:1;
+  translate:-50% 30%;animation:sunrise 6s ease-in-out infinite;
+  --cut:linear-gradient(to bottom,#000 0 47%,transparent 47% 49.5%,#000 49.5% 54%,transparent 54% 57.5%,#000 57.5% 61%,transparent 61% 66%,#000 66%);
+  -webkit-mask:var(--cut);mask:var(--cut);
+}
+.glow{ /* soft halo behind the sun */
+  position:absolute;left:50%;bottom:0;width:clamp(330px,88vw,470px);aspect-ratio:1;translate:-50% 50%;z-index:0;
+  background:radial-gradient(circle,rgba(255,226,140,.85) 0 24%,rgba(255,206,100,.35) 38%,transparent 62%);
+}
+.sun img{width:100%;height:100%;display:block;border-radius:50%}
+.sun::after{ /* shine sweeping across the gold */
+  content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  background:linear-gradient(115deg,transparent 38%,rgba(255,250,225,.75) 48%,transparent 58%) no-repeat;
+  background-size:250% 100%;background-position:150% 0;mix-blend-mode:soft-light;
+  animation:shine 6s ease-in-out 1.5s infinite;
+}
+@keyframes sunrise{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes shine{0%,60%{background-position:150% 0}100%{background-position:-60% 0}}
+/* the sea, with the sun's gold reflection */
+.sea{
+  position:relative;padding:14px 16px 46px;overflow:hidden;
+  background:
+    repeating-linear-gradient(to bottom,transparent 0 13px,rgba(251,243,225,.10) 13px 15px),
+    linear-gradient(to bottom,var(--sea),var(--sea-deep));
+  border-top:3px solid var(--navy);
+}
+.sea::before{
+  content:"";position:absolute;left:50%;top:0;width:clamp(150px,40vw,214px);height:100%;translate:-50% 0;
+  background:repeating-linear-gradient(to bottom,rgba(248,210,124,.85) 0 5px,transparent 5px 14px);
+  clip-path:polygon(4% 0,96% 0,72% 100%,28% 100%);
+  -webkit-mask:linear-gradient(to bottom,#000,transparent 92%);mask:linear-gradient(to bottom,#000,transparent 92%);
+  animation:ripple 3.5s linear infinite;
+}
+.sea::after{ /* halftone at the bottom of the water */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle,rgba(23,58,79,.25) 1.3px,transparent 1.7px) 0 0/7px 7px;
+  -webkit-mask:linear-gradient(to top,#000,transparent 70%);mask:linear-gradient(to top,#000,transparent 70%);
+}
+.sea > *{position:relative;z-index:1}
+@keyframes ripple{to{background-position:0 14px}}
 .logo{
   font-family:"Bagel Fat One","Titan One",var(--display);font-weight:400;font-size:clamp(52px,15vw,96px);line-height:1;
   margin:6px 0 4px;color:var(--paper);letter-spacing:-.01em;
@@ -83,21 +129,6 @@ header{position:relative;margin-bottom:26px}
 /* swooping stripes under the panel */
 .stripes{display:block;width:100%;height:auto;margin-top:-34px;position:relative;z-index:2}
 
-/* Shmeek coin */
-.coin-logo{
-  position:relative;display:block;width:clamp(92px,24vw,124px);aspect-ratio:1;margin:0 auto 6px;
-  border-radius:50%;animation:float 4.5s ease-in-out infinite;
-  filter:drop-shadow(5px 6px 0 rgba(23,58,79,.55));
-}
-.coin-logo img{width:100%;height:100%;display:block;border-radius:50%}
-.coin-logo::after{
-  content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
-  background:linear-gradient(115deg,transparent 38%,rgba(255,250,225,.75) 48%,transparent 58%) no-repeat;
-  background-size:250% 100%;background-position:150% 0;mix-blend-mode:soft-light;
-  animation:shine 6s ease-in-out 1.5s infinite;
-}
-@keyframes float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(4deg)}}
-@keyframes shine{0%,60%{background-position:150% 0}100%{background-position:-60% 0}}
 .chip .mini{width:18px;height:18px;vertical-align:-3px;margin-right:6px;border-radius:50%}
 
 /* ---------- cards & controls ---------- */
@@ -204,7 +235,7 @@ b{font-weight:800}
 footer{text-align:center;margin-top:34px;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--sky)}
 @media (max-width:420px){.card{padding:18px}.ladder .ex{display:none}}
 @media (prefers-reduced-motion:reduce){
-  body::before,.sky::before,.coin-logo,.coin-logo::after,.logo span{animation:none}
+  body::before,.scene::before,.sun,.sun::after,.sea::before,.logo span{animation:none}
   .reveal-banner.jackpot,.reveal-banner.jackpot::before,.reveal-banner.jackpot .t,.ladder li.jp.hit{animation:none}
   .coin{display:none}
 }
@@ -214,9 +245,14 @@ footer{text-align:center;margin-top:34px;font-size:11px;font-weight:800;letter-s
 <div class="wrap">
   <header>
     <div class="sky">
-      <div class="coin-logo"><img src="assets/coin.webp" alt="" width="288" height="288"></div>
-      <h1 class="logo" aria-label="Shmeeks"><span aria-hidden="true">S</span><span aria-hidden="true">H</span><span aria-hidden="true">M</span><span aria-hidden="true">E</span><span aria-hidden="true">E</span><span aria-hidden="true">K</span><span aria-hidden="true">S</span></h1>
-      <div class="tagline">In Shmeek We Trust</div>
+      <div class="scene" aria-hidden="true">
+        <div class="glow"></div>
+        <div class="sun"><img src="assets/coin.webp" alt="" width="288" height="288"></div>
+      </div>
+      <div class="sea">
+        <h1 class="logo" aria-label="Shmeeks"><span aria-hidden="true">S</span><span aria-hidden="true">H</span><span aria-hidden="true">M</span><span aria-hidden="true">E</span><span aria-hidden="true">E</span><span aria-hidden="true">K</span><span aria-hidden="true">S</span></h1>
+        <div class="tagline">In Shmeek We Trust</div>
+      </div>
     </div>
     <svg class="stripes" viewBox="0 0 600 142" aria-hidden="true" preserveAspectRatio="none">
       <defs>
