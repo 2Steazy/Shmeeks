@@ -46,7 +46,7 @@ body::after{
 .wrap{width:100%;max-width:620px}
 
 /* ---------- poster header: retro sunset ---------- */
-header{position:relative;margin-bottom:26px}
+header{position:relative;margin-bottom:46px}
 .sky{position:relative;overflow:hidden;text-align:center;border:3px solid var(--navy);border-radius:34px;background:var(--sea)}
 :root{--sea:#2f9cc6;--sea-deep:#1f6f93}
 .sky > *{position:relative;z-index:1}
@@ -71,14 +71,16 @@ header{position:relative;margin-bottom:26px}
 .sun{
   position:absolute;left:50%;bottom:0;width:clamp(150px,40vw,214px);aspect-ratio:1;z-index:1;
   translate:-50% 30%;animation:sunrise 6s ease-in-out infinite;
-  --cut:linear-gradient(to bottom,#000 0 47%,transparent 47% 49.5%,#000 49.5% 54%,transparent 54% 57.5%,#000 57.5% 61%,transparent 61% 66%,#000 66%);
-  -webkit-mask:var(--cut);mask:var(--cut);
 }
 .glow{ /* soft halo behind the sun */
   position:absolute;left:50%;bottom:0;width:clamp(330px,88vw,470px);aspect-ratio:1;translate:-50% 50%;z-index:0;
   background:radial-gradient(circle,rgba(255,226,140,.85) 0 24%,rgba(255,206,100,.35) 38%,transparent 62%);
 }
-.sun img{width:100%;height:100%;display:block;border-radius:50%}
+.sun img{width:100%;height:100%;display:block;border-radius:50%;
+  /* glowing rim that eases the coin into the sky */
+  box-shadow:0 0 0 2px rgba(255,240,190,.75),0 0 14px 5px rgba(255,226,140,.85),0 0 34px 14px rgba(255,196,90,.55),0 0 70px 30px rgba(255,170,70,.30);
+  animation:sunglow 5s ease-in-out infinite;}
+@keyframes sunglow{50%{box-shadow:0 0 0 2px rgba(255,240,190,.9),0 0 18px 7px rgba(255,226,140,.95),0 0 44px 18px rgba(255,196,90,.6),0 0 86px 36px rgba(255,170,70,.35)}}
 .sun::after{ /* shine sweeping across the gold */
   content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
   background:linear-gradient(115deg,transparent 38%,rgba(255,250,225,.75) 48%,transparent 58%) no-repeat;
@@ -136,6 +138,25 @@ header{position:relative;margin-bottom:26px}
   background:var(--paper);border:3px solid var(--navy);border-radius:26px;padding:24px;position:relative;
   box-shadow:6px 6px 0 var(--red),12px 12px 0 var(--mustard);
 }
+.stack{display:grid;gap:40px}
+.how{padding:0;overflow:hidden;box-shadow:6px 6px 0 var(--sky),12px 12px 0 var(--navy)}
+.ribbon{
+  position:relative;background:var(--navy);color:var(--paper);font-family:var(--display);font-size:20px;letter-spacing:2px;
+  text-align:center;padding:14px 20px 20px;text-shadow:2px 2px 0 var(--red);
+}
+.ribbon::after{ /* retro stripe trim */
+  content:"";position:absolute;left:0;right:0;bottom:0;height:9px;
+  background:linear-gradient(to bottom,var(--red) 0 3px,var(--orange) 3px 6px,var(--mustard) 6px 9px);
+}
+.how-body{padding:20px 24px 22px}
+.steps{list-style:none;counter-reset:step;padding:0;margin:0 0 6px;display:grid;gap:12px}
+.steps li{counter-increment:step;display:flex;gap:12px;align-items:flex-start;line-height:1.45}
+.steps li::before{
+  content:counter(step);flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
+  background:var(--mustard);border:3px solid var(--navy);font-family:var(--display);font-size:15px;color:var(--navy);
+}
+.ladder-title{font-family:var(--display);font-size:16px;margin:18px 0 0;color:var(--navy);letter-spacing:.5px}
+.lead{font-size:17px;margin:0 0 18px}
 h2{font-family:var(--display);font-weight:400;margin:0 0 10px;font-size:24px;color:var(--navy)}
 p{line-height:1.55}
 b{font-weight:800}
@@ -235,7 +256,7 @@ b{font-weight:800}
 footer{text-align:center;margin-top:34px;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--sky)}
 @media (max-width:420px){.card{padding:18px}.ladder .ex{display:none}}
 @media (prefers-reduced-motion:reduce){
-  body::before,.scene::before,.sun,.sun::after,.sea::before,.logo span{animation:none}
+  body::before,.scene::before,.sun,.sun img,.sun::after,.sea::before,.logo span{animation:none}
   .reveal-banner.jackpot,.reveal-banner.jackpot::before,.reveal-banner.jackpot .t,.ladder li.jp.hit{animation:none}
   .coin{display:none}
 }
@@ -596,14 +617,27 @@ function ladderHTML(q,hit){
 function home(){
   clearInterval(timerId);
   const day=todayKey(), done=store.get("shmeeks-daily-"+day);
-  app.innerHTML=`<div class="card">
+  app.innerHTML=`<div class="stack">
+  <div class="card">
     <h2>Come on down!</h2>
-    <p>Every question asks for the <b>most expensive</b> type of something. Type your answer. You have <b>${TIME_LIMIT} seconds</b> per question and ${ROUND_LEN} questions per round. The closer you get to the top price, the bigger the payout:</p>
-    ${ladderHTML()}
-    ${done ? `<p style="text-align:center;font-weight:900">Today's round: ${fmt(done.score)} pts &nbsp;${done.emojis}</p>
+    ${done ? `<p class="lead">You've played today's round: <b>${fmt(done.score)} pts</b> &nbsp;${done.emojis}</p>
       <div class="row"><button class="btn pink" id="bonus">Bonus round</button><button class="btn alt" id="share">Share today</button></div>`
-      : `<button class="btn block" id="play">Play today's round</button>`}
-    <p class="note">A new daily round drops at midnight. Typos are forgiven.</p>
+      : `<p class="lead">Today's round is ready: <b>${ROUND_LEN} questions</b>, <b>${TIME_LIMIT} seconds</b> each.</p>
+      <button class="btn block" id="play">Play today's round</button>`}
+    <p class="note">A new daily round drops at midnight.</p>
+  </div>
+  <section class="card how">
+    <div class="ribbon">HOW TO PLAY</div>
+    <div class="how-body">
+      <ol class="steps">
+        <li><span>Every question asks for the <b>most expensive</b> type of something, like grapes, cars or caviar.</span></li>
+        <li><span>Type your answer. Spelling slips are forgiven, and you have <b>${TIME_LIMIT} seconds</b> per question.</span></li>
+        <li><span>The closer you get to the top price, the bigger the payout. ${ROUND_LEN} questions per round, ${fmt(ROUND_LEN*1000)} points up for grabs.</span></li>
+      </ol>
+      <p class="ladder-title">The payout ladder</p>
+      ${ladderHTML()}
+    </div>
+  </section>
   </div>`;
   if(done){
     bonus.onclick=()=>start("bonus");
