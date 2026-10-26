@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Shmeeks</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="assets/favicon-64.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0d1554">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Archivo:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -17,13 +21,39 @@ html,body{margin:0;min-height:100%}
 body{
   font-family:"Archivo",system-ui,sans-serif;color:var(--ink);
   background:var(--blue-deep);
-  background-image:
-    radial-gradient(circle at 50% 30%, rgba(255,210,63,.18), transparent 55%),
-    repeating-conic-gradient(from 0deg at 50% 30%, var(--blue) 0deg 10deg, var(--blue-deep) 10deg 20deg);
   min-height:100vh;display:flex;justify-content:center;padding:24px 16px 48px;
+  position:relative;overflow-x:hidden;
 }
+/* Game-show sunburst: the rays slowly turn behind everything */
+body::before{
+  content:"";position:fixed;left:50%;top:30vh;width:300vmax;height:300vmax;z-index:-2;
+  translate:-50% -50%;
+  background:repeating-conic-gradient(from 0deg, var(--blue) 0deg 10deg, var(--blue-deep) 10deg 20deg);
+  animation:rays 160s linear infinite;
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(circle at 50% 30%, rgba(255,210,63,.20), transparent 55%);
+}
+@keyframes rays{to{rotate:360deg}}
 .wrap{width:100%;max-width:620px}
 header{text-align:center;margin-bottom:18px}
+/* Shmeek coin */
+.coin-logo{
+  position:relative;display:block;width:clamp(96px,26vw,132px);aspect-ratio:1;margin:0 auto -6px;
+  border-radius:50%;animation:float 4.5s ease-in-out infinite;
+  filter:drop-shadow(0 10px 14px rgba(0,0,0,.45)) drop-shadow(0 0 22px rgba(255,200,40,.35));
+}
+.coin-logo img{width:100%;height:100%;display:block;border-radius:50%}
+.coin-logo::after{  /* shine sweeping across the gold */
+  content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  background:linear-gradient(115deg,transparent 38%,rgba(255,250,225,.75) 48%,transparent 58%) no-repeat;
+  background-size:250% 100%;background-position:150% 0;mix-blend-mode:soft-light;
+  animation:shine 6s ease-in-out 1.5s infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(4deg)}}
+@keyframes shine{0%,60%{background-position:150% 0}100%{background-position:-60% 0}}
+.chip .mini{width:18px;height:18px;vertical-align:-3px;margin-right:6px;border-radius:50%}
 .logo{
   font-family:"Bungee",sans-serif;font-size:clamp(44px,12vw,76px);line-height:1;margin:0;
   color:var(--yellow);letter-spacing:2px;
@@ -95,7 +125,9 @@ p{line-height:1.5}
   70%{opacity:1}
   100%{transform:translate(calc(var(--x0) + var(--dx)),calc(var(--y0) + var(--dy))) scale(1) rotate(var(--r));opacity:0}
 }
+.coin-img{width:30px;height:30px;display:block;border-radius:50%;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
 @media (prefers-reduced-motion:reduce){
+  body::before,.coin-logo,.coin-logo::after{animation:none}
   .reveal-banner.jackpot,.reveal-banner.jackpot::before,.reveal-banner.jackpot .t,.ladder li.jp.hit{animation:none}
   .coin{display:none}
 }
@@ -146,6 +178,7 @@ p{line-height:1.5}
 <body>
 <div class="wrap">
   <header>
+    <div class="coin-logo"><img src="assets/coin.webp" alt="" width="288" height="288"></div>
     <h1 class="logo">SHMEEKS</h1>
     <div class="tagline">Name the priciest. Win big.</div>
   </header>
@@ -496,7 +529,7 @@ function start(mode){
 function ask(){
   const q=S.qs[S.i];
   app.innerHTML=`
-    <div class="hud"><span class="chip">Q ${S.i+1} / ${ROUND_LEN}</span><span class="chip y">${fmt(total())} pts</span></div>
+    <div class="hud"><span class="chip">Q ${S.i+1} / ${ROUND_LEN}</span><span class="chip y"><img class="mini" src="assets/coin-small.webp" alt="">${fmt(total())} pts</span></div>
     <div class="card">
       <span class="cat">${esc(q.cat)}</span>
       <p class="question">${esc(q.q)}</p>
@@ -536,7 +569,7 @@ function lockIn(timedOut){
 function reveal(){
   const r=S.results[S.i], last=S.i===ROUND_LEN-1;
   app.innerHTML=`
-    <div class="hud"><span class="chip">Q ${S.i+1} / ${ROUND_LEN}</span><span class="chip y">${fmt(total())} pts</span></div>
+    <div class="hud"><span class="chip">Q ${S.i+1} / ${ROUND_LEN}</span><span class="chip y"><img class="mini" src="assets/coin-small.webp" alt="">${fmt(total())} pts</span></div>
     <div class="card">
       <div class="reveal-banner${r.ti===0?" jackpot":""}" id="banner" style="background:${r.tier.color}">
         <div class="t">${r.timedOut && !r.raw ? "TIME'S UP!" : r.tier.name}</div>
@@ -557,10 +590,11 @@ function reveal(){
 function coinBurst(){
   const b=document.getElementById("banner"); if(!b) return;
   const box=b.getBoundingClientRect(), cx=box.left+box.width/2, cy=box.top+box.height/2;
-  const bits=["🪙","💰","✨","💎","🪙","⭐"];
+  const bits=["coin","✨","coin","💰","coin","⭐"];   // "coin" = a real Shmeek coin
   for(let i=0;i<34;i++){
     const s=document.createElement("span"); s.className="coin";
-    s.textContent=bits[i%bits.length];
+    if(bits[i%bits.length]==="coin"){ const im=new Image(); im.src="assets/coin-small.webp"; im.className="coin-img"; s.appendChild(im); }
+    else s.textContent=bits[i%bits.length];
     const ang=Math.random()*Math.PI*2, dist=120+Math.random()*220;
     s.style.setProperty("--x0",(cx-13)+"px"); s.style.setProperty("--y0",(cy-13)+"px");
     s.style.setProperty("--dx",Math.cos(ang)*dist+"px");
