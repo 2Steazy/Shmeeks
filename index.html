@@ -1,618 +1,637 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Shmeeks</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Shmeeks: random trivia where you type your answer and close counts.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Archivo:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
-/* Layout: one narrow left-aligned play column; a header with the round pips, one question card, and a closeness meter that is the hero of every reveal. */
-:root {
-  --bg: #eef1f8;
-  --surface: #ffffff;
-  --sunk: #e2e6f2;
-  --ink: #161a33;
-  --muted: #5c6385;
-  --line: #cfd5e8;
-  --accent: #3634d6;
-  --accent-ink: #ffffff;
-  --sun: #ffcf33;
-  --sun-ink: #2a2200;
-  --good: #158a5c;
-  --ok: #b47e00;
-  --warm: #d4632a;
-  --miss: #c93c3c;
-  --shadow: 0 1px 0 rgba(22, 26, 51, .06), 0 10px 30px -12px rgba(22, 26, 51, .25);
-  --f-display: "Bungee", "Arial Black", Impact, sans-serif;
-  --f-body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+:root{
+  --blue:#1b2a8f; --blue-deep:#0d1554; --purple:#5b1fa8;
+  --yellow:#ffd23f; --orange:#ff8a1f; --pink:#ff3e8a; --green:#2fd27a; --red:#ff4d4d;
+  --ink:#141414; --paper:#fffaf0; --muted:#6b6b6b;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0f1228; --surface: #191d3b; --sunk: #232853; --ink: #eef0ff; --muted: #a0a7cf; --line: #30366a;
-    --accent: #8f8dff; --accent-ink: #0f1228; --sun: #ffd23f; --sun-ink: #2a2200;
-    --good: #4ddc9c; --ok: #ffd23f; --warm: #ff9a5c; --miss: #ff7b7b;
-    --shadow: 0 1px 0 rgba(0,0,0,.3), 0 14px 34px -14px rgba(0,0,0,.7);
-    color-scheme: dark;
-  }
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:"Archivo",system-ui,sans-serif;color:var(--ink);
+  background:var(--blue-deep);
+  background-image:
+    radial-gradient(circle at 50% 30%, rgba(255,210,63,.18), transparent 55%),
+    repeating-conic-gradient(from 0deg at 50% 30%, var(--blue) 0deg 10deg, var(--blue-deep) 10deg 20deg);
+  min-height:100vh;display:flex;justify-content:center;padding:24px 16px 48px;
 }
-:root[data-theme="dark"] {
-  --bg: #0f1228; --surface: #191d3b; --sunk: #232853; --ink: #eef0ff; --muted: #a0a7cf; --line: #30366a;
-  --accent: #8f8dff; --accent-ink: #0f1228; --sun: #ffd23f; --sun-ink: #2a2200;
-  --good: #4ddc9c; --ok: #ffd23f; --warm: #ff9a5c; --miss: #ff7b7b;
-  --shadow: 0 1px 0 rgba(0,0,0,.3), 0 14px 34px -14px rgba(0,0,0,.7);
-  color-scheme: dark;
+.wrap{width:100%;max-width:620px}
+header{text-align:center;margin-bottom:18px}
+.logo{
+  font-family:"Bungee",sans-serif;font-size:clamp(44px,12vw,76px);line-height:1;margin:0;
+  color:var(--yellow);letter-spacing:2px;
+  text-shadow:3px 3px 0 var(--pink),6px 6px 0 var(--ink);
+  transform:rotate(-3deg);display:inline-block;
 }
-
-* { box-sizing: border-box; }
-html, body { min-height: 100%; }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: var(--f-body);
-  font-size: 16px;
-  line-height: 1.5;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  -webkit-font-smoothing: antialiased;
+.tagline{color:#fff;font-weight:900;letter-spacing:3px;text-transform:uppercase;font-size:13px;margin-top:12px;opacity:.9}
+.card{
+  background:var(--paper);border:4px solid var(--ink);border-radius:18px;
+  box-shadow:8px 8px 0 var(--ink);padding:24px;position:relative;
 }
-.wrap { max-width: 640px; margin: 0 auto; padding-block: 20px 48px; display: flex; flex-direction: column; gap: 20px; }
-
-/* Header */
-.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.logo { font-family: var(--f-display); font-size: 26px; letter-spacing: .5px; color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; line-height: 1; }
-.logo b { color: var(--accent); font-weight: 400; }
-.status { display: flex; gap: 16px; align-items: baseline; font-size: 14px; color: var(--muted); }
-.status strong { font-family: var(--f-mono); color: var(--ink); font-size: 16px; font-variant-numeric: tabular-nums; }
-.pips { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
-.pip { height: 8px; border-radius: 4px; background: var(--sunk); transition: background .3s; }
-.pip.now { background: var(--accent); }
-.pip.s-good { background: var(--good); } .pip.s-ok { background: var(--ok); } .pip.s-warm { background: var(--warm); } .pip.s-miss { background: var(--miss); }
-
-/* Card */
-.card { background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); padding: 28px; display: flex; flex-direction: column; gap: 20px; }
-@media (max-width: 480px) { .card { padding: 20px; border-radius: 14px; } }
-.meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.chip { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; background: var(--sunk); color: var(--muted); }
-.chip.kind { background: var(--accent); color: var(--accent-ink); }
-.question { font-size: clamp(22px, 5vw, 30px); font-weight: 700; line-height: 1.22; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
-
-form.answer { display: flex; gap: 10px; flex-wrap: wrap; }
-.answer input {
-  flex: 1 1 240px; min-width: 0;
-  font: 600 20px var(--f-body);
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 2px solid var(--line);
-  background: var(--bg);
-  color: var(--ink);
+.bulbs{position:absolute;inset:-4px;border-radius:18px;pointer-events:none;
+  background:
+    radial-gradient(circle,var(--yellow) 3px,transparent 4px) 0 0/22px 22px repeat-x,
+    radial-gradient(circle,var(--yellow) 3px,transparent 4px) 0 100%/22px 22px repeat-x;
+  opacity:.0}
+h2{font-family:"Bungee",sans-serif;font-weight:400;margin:0 0 10px;font-size:22px}
+p{line-height:1.5}
+.btn{
+  font-family:"Bungee",sans-serif;font-size:18px;letter-spacing:1px;
+  background:var(--yellow);color:var(--ink);border:3px solid var(--ink);border-radius:12px;
+  padding:14px 22px;cursor:pointer;box-shadow:4px 4px 0 var(--ink);transition:transform .08s, box-shadow .08s;
 }
-.answer input:focus { outline: none; border-color: var(--accent); }
-.answer input:disabled { opacity: .7; }
-.hint { font-size: 14px; color: var(--muted); margin: -8px 0 0; min-height: 21px; }
-.hint.err { color: var(--miss); font-weight: 600; }
-
-.btn {
-  font: 800 16px var(--f-body);
-  padding: 14px 22px;
-  border-radius: 12px;
-  border: 0;
-  cursor: pointer;
-  background: var(--accent);
-  color: var(--accent-ink);
-  transition: transform .12s, filter .12s;
+.btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--ink)}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn.alt{background:#fff}
+.btn.pink{background:var(--pink);color:#fff}
+.btn.block{width:100%}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row .btn{flex:1}
+.ladder{list-style:none;padding:0;margin:14px 0 18px;display:grid;gap:6px}
+.ladder li{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  border:3px solid var(--ink);border-radius:10px;padding:8px 12px;font-weight:900;
 }
-.btn:hover { filter: brightness(1.08); }
-.btn:active { transform: translateY(1px); }
-.btn.sun { background: var(--sun); color: var(--sun-ink); }
-.btn.ghost { background: var(--sunk); color: var(--ink); }
-.btn:focus-visible, .logo:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+.ladder .tier-name{font-family:"Bungee",sans-serif;font-weight:400;font-size:14px}
+.ladder .ex{font-weight:700;font-size:13px;color:#333;flex:1;text-align:right}
+.ladder .pts{font-family:"Bungee",sans-serif;font-weight:400;min-width:64px;text-align:right}
+.ladder li.hit{outline:4px solid var(--ink);transform:scale(1.03);box-shadow:4px 4px 0 var(--ink)}
+.ladder li.dim{opacity:.45}
+.ladder li.jp{border-color:var(--jp-red);box-shadow:inset 0 0 0 2px #fff3a0}
+.ladder li.jp.hit{outline:4px solid var(--jp-red);background-size:300% 100% !important;animation:shimmer 2.2s linear infinite, glow 1s ease-in-out infinite alternate}
 
-/* Reveal */
-.reveal { display: flex; flex-direction: column; gap: 16px; border-top: 2px dashed var(--line); padding-top: 20px; }
-.verdict-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
-.verdict { font-family: var(--f-display); font-size: 24px; line-height: 1; }
-.points { font-family: var(--f-mono); font-weight: 700; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
-.points small { font-size: 15px; color: var(--muted); font-weight: 500; }
-.c-good { color: var(--good); } .c-ok { color: var(--ok); } .c-warm { color: var(--warm); } .c-miss { color: var(--miss); }
-
-.meter { position: relative; padding-bottom: 20px; }
-.track { height: 16px; border-radius: 8px; background: var(--sunk); overflow: hidden; }
-.fill { height: 100%; width: 0; border-radius: 8px; background: var(--sun); transition: width .7s cubic-bezier(.2,.8,.2,1); }
-.ticks { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; font: 500 11px var(--f-mono); color: var(--muted); }
-
-.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-.fact { background: var(--bg); border-radius: 12px; padding: 12px 14px; min-width: 0; }
-.fact span { display: block; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.fact strong { display: block; font-size: 18px; overflow-wrap: anywhere; }
-.fact strong.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
-
-/* Start screen */
-.hero { display: flex; flex-direction: column; gap: 14px; }
-.hero h1 { font-family: var(--f-display); font-weight: 400; font-size: clamp(46px, 13vw, 84px); line-height: .95; margin: 8px 0 0; letter-spacing: 1px; }
-.hero h1 b { color: var(--accent); font-weight: 400; }
-.tagline { font-size: 20px; font-weight: 600; margin: 0; max-width: 34ch; }
-.lede { margin: 0; color: var(--muted); max-width: 56ch; }
-.rules { display: grid; gap: 10px; }
-.rule { display: grid; grid-template-columns: 92px 1fr; gap: 14px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--line); }
-.rule:last-child { border-bottom: 0; }
-.rule .k { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
-.rule p { margin: 0; }
-.rule em { font-style: normal; font-family: var(--f-mono); font-size: 14px; background: var(--sunk); padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
-.actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.best { font-size: 14px; color: var(--muted); margin: 0; }
-.best strong { font-family: var(--f-mono); color: var(--ink); }
-
-/* End screen */
-.final { display: flex; flex-direction: column; gap: 4px; }
-.final .label { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.final .total { font-family: var(--f-mono); font-weight: 700; font-size: clamp(56px, 16vw, 88px); line-height: 1; font-variant-numeric: tabular-nums; }
-.final .total small { font-size: .35em; color: var(--muted); font-weight: 500; }
-.final .rank { font-family: var(--f-display); font-size: 24px; color: var(--accent); }
-.rounds { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.rounds li { display: grid; grid-template-columns: 14px 1fr auto; gap: 12px; align-items: start; padding: 12px 0; border-bottom: 1px solid var(--line); }
-.rounds li:last-child { border-bottom: 0; }
-.dot { width: 12px; height: 12px; border-radius: 50%; margin-top: 5px; }
-.dot.s-good { background: var(--good); } .dot.s-ok { background: var(--ok); } .dot.s-warm { background: var(--warm); } .dot.s-miss { background: var(--miss); }
-.rounds .q { font-weight: 600; min-width: 0; }
-.rounds .sub { display: block; font-weight: 400; font-size: 14px; color: var(--muted); }
-.rounds .pts { font-family: var(--f-mono); font-weight: 700; font-variant-numeric: tabular-nums; }
-.share { width: 100%; font: 500 14px var(--f-mono); padding: 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); resize: none; }
-.foot { font-size: 13px; color: var(--muted); text-align: left; }
-
-@media (prefers-reduced-motion: reduce) { .fill, .pip, .btn { transition: none; } }
+/* ----- Jackpot! ----- */
+:root{--jp-red:#c1121f}
+.reveal-banner{position:relative;overflow:hidden}
+.reveal-banner > *{position:relative;z-index:1}
+.reveal-banner.jackpot{
+  background-size:300% 100% !important;border:5px solid var(--jp-red);
+  box-shadow:0 0 0 4px #ffd700,0 0 0 9px var(--jp-red),0 0 34px 12px rgba(255,200,0,.65);
+  animation:pop .5s cubic-bezier(.2,1.6,.4,1), shimmer 2.2s linear infinite, glow 1s ease-in-out .5s infinite alternate;
+  margin:10px 6px 22px;
+}
+.reveal-banner.jackpot::before{
+  content:"";position:absolute;left:50%;top:50%;width:260%;aspect-ratio:1;translate:-50% -50%;z-index:0;
+  background:repeating-conic-gradient(rgba(193,18,31,.22) 0deg 9deg, transparent 9deg 18deg);
+  animation:spin 9s linear infinite;
+}
+.reveal-banner.jackpot .t{color:var(--jp-red);text-shadow:2px 2px 0 #fff6b0,4px 4px 0 var(--ink);animation:bounce .8s ease-in-out .5s infinite alternate}
+.reveal-banner.jackpot .p{color:var(--ink);text-shadow:1px 1px 0 #fff6b0}
+@keyframes shimmer{from{background-position:0% 50%}to{background-position:300% 50%}}
+@keyframes glow{from{filter:brightness(1)}to{filter:brightness(1.18) saturate(1.2)}}
+@keyframes spin{to{rotate:360deg}}
+@keyframes bounce{from{transform:scale(1)}to{transform:scale(1.08)}}
+.coin{position:fixed;z-index:50;pointer-events:none;font-size:26px;left:0;top:0;
+  animation:burst 1.5s cubic-bezier(.15,.7,.3,1) forwards}
+@keyframes burst{
+  0%{transform:translate(var(--x0),var(--y0)) scale(.3) rotate(0);opacity:1}
+  70%{opacity:1}
+  100%{transform:translate(calc(var(--x0) + var(--dx)),calc(var(--y0) + var(--dy))) scale(1) rotate(var(--r));opacity:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .reveal-banner.jackpot,.reveal-banner.jackpot::before,.reveal-banner.jackpot .t,.ladder li.jp.hit{animation:none}
+  .coin{display:none}
+}
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;color:#fff;font-weight:900}
+.chip{background:var(--pink);color:#fff;border:3px solid var(--ink);border-radius:999px;padding:4px 12px;font-family:"Bungee",sans-serif;font-size:14px;box-shadow:3px 3px 0 var(--ink)}
+.chip.y{background:var(--yellow);color:var(--ink)}
+.cat{display:inline-block;background:var(--blue);color:#fff;font-weight:900;font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border-radius:6px;margin-bottom:10px}
+.question{font-family:"Bungee",sans-serif;font-size:clamp(22px,5.5vw,30px);line-height:1.2;margin:0 0 18px}
+.timer{height:16px;border:3px solid var(--ink);border-radius:999px;overflow:hidden;background:#fff;margin-bottom:6px}
+.timer > div{height:100%;width:100%;background:var(--green);transition:background .3s}
+.timer-label{display:flex;justify-content:space-between;font-weight:900;font-size:14px;margin-bottom:16px}
+.tag{
+  position:relative;display:flex;align-items:center;background:#fff;border:4px solid var(--ink);
+  border-radius:14px 40px 40px 14px;padding:4px 6px 4px 18px;box-shadow:4px 4px 0 var(--ink);margin-bottom:16px;
+}
+.tag::after{content:"";position:absolute;right:16px;top:50%;width:12px;height:12px;margin-top:-6px;border:3px solid var(--ink);border-radius:50%;background:var(--paper)}
+.tag input{
+  flex:1;min-width:0;border:0;outline:0;background:transparent;font:900 22px "Archivo",sans-serif;
+  padding:12px 40px 12px 0;color:var(--ink);
+}
+.reveal-banner{
+  text-align:center;border:4px solid var(--ink);border-radius:14px;padding:16px;margin-bottom:16px;
+  box-shadow:5px 5px 0 var(--ink);animation:pop .45s cubic-bezier(.2,1.6,.4,1);
+}
+.reveal-banner .t{font-family:"Bungee",sans-serif;font-size:clamp(28px,8vw,42px);line-height:1}
+.reveal-banner .p{font-family:"Bungee",sans-serif;font-size:22px;margin-top:6px}
+@keyframes pop{from{transform:scale(.4) rotate(-6deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.yours{font-weight:700;margin:0 0 4px}
+.yours b{font-weight:900}
+.fact{background:#fff3c4;border:3px dashed var(--ink);border-radius:10px;padding:12px 14px;margin:12px 0 16px;font-weight:500}
+.total{font-family:"Bungee",sans-serif;font-size:clamp(48px,14vw,72px);text-align:center;line-height:1;margin:8px 0 2px;color:var(--pink);text-shadow:3px 3px 0 var(--ink)}
+.of{text-align:center;font-weight:900;color:var(--muted);margin-bottom:10px}
+.rank{text-align:center;font-family:"Bungee",sans-serif;font-size:20px;margin-bottom:8px}
+.emojis{text-align:center;font-size:30px;letter-spacing:4px;margin:6px 0 16px}
+.summary{list-style:none;padding:0;margin:0 0 18px;display:grid;gap:6px}
+.summary li{display:flex;gap:10px;align-items:center;border-bottom:2px dotted #ccc;padding:6px 0;font-size:14px}
+.summary li span:nth-child(2){flex:1}
+.summary small{color:var(--muted);display:block}
+.summary .sp{font-family:"Bungee",sans-serif}
+.note{font-size:13px;color:var(--muted);text-align:center;margin-top:12px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;font-weight:900;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media (max-width:420px){.card{padding:18px}.ladder .ex{display:none}}
 </style>
 </head>
 <body>
-
 <div class="wrap">
-  <header class="top">
-    <button class="logo" id="home" type="button" aria-label="Shmeeks home">SHMEE<b>KS</b></button>
-    <div class="status" id="status" hidden>
-      <span>Round <strong id="roundNum">1</strong>/10</span>
-      <span>Score <strong id="scoreNum">0</strong></span>
-    </div>
+  <header>
+    <h1 class="logo">SHMEEKS</h1>
+    <div class="tagline">Name the priciest. Win big.</div>
   </header>
-  <div class="pips" id="pips" aria-hidden="true"></div>
-
-  <!-- Start -->
-  <section class="card" id="start">
-    <div class="hero">
-      <h1>SHMEE<b>KS</b></h1>
-      <p class="tagline">Random trivia where close counts.</p>
-      <p class="lede">Ten questions. No multiple choice. Type what you think the answer is, and you get points for how close you land.</p>
-    </div>
-    <div class="rules" aria-label="How scoring works">
-      <div class="rule"><span class="k">Numbers</span><p>Scored by how far off you are. A piano has 88 keys, so guessing <em>80</em> still earns <em id="demoNum">80 pts</em>.</p></div>
-      <div class="rule"><span class="k">Years</span><p>Every year off costs you. Moon landing in <em>1968</em>? That's <em id="demoYear">87 pts</em>.</p></div>
-      <div class="rule"><span class="k">Words</span><p>Typos are forgiven. <em>Kilimanjoro</em> scores <em id="demoWord">100 pts</em>.</p></div>
-    </div>
-    <div class="actions">
-      <button class="btn" id="playDaily" type="button">Play today's ten</button>
-      <button class="btn ghost" id="playRandom" type="button">Random ten</button>
-    </div>
-    <p class="best" id="bestLine"></p>
-  </section>
-
-  <!-- Play -->
-  <section class="card" id="play" hidden>
-    <div class="meta">
-      <span class="chip kind" id="kindChip">Number</span>
-      <span class="chip" id="catChip">Science</span>
-    </div>
-    <h2 class="question" id="qText">Question</h2>
-    <form class="answer" id="answerForm" autocomplete="off">
-      <input aria-label="Your answer" id="answerInput" name="answer" type="text" placeholder="Type your answer" spellcheck="false" autocapitalize="off">
-      <button class="btn sun" id="submitBtn" type="submit">Lock it in</button>
-    </form>
-    <p class="hint" id="hint" aria-live="polite"></p>
-
-    <div class="reveal" id="reveal" hidden aria-live="polite">
-      <div class="verdict-row">
-        <span class="verdict" id="verdict">Bullseye</span>
-        <span class="points" id="points">100 <small>/ 100</small></span>
-      </div>
-      <div class="meter" aria-hidden="true">
-        <div class="track"><div class="fill" id="fill"></div></div>
-        <div class="ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
-      </div>
-      <div class="facts">
-        <div class="fact"><span>You said</span><strong id="yourAns">—</strong></div>
-        <div class="fact"><span>Answer</span><strong id="realAns">—</strong></div>
-        <div class="fact" id="offBox"><span>Off by</span><strong class="num" id="offBy">—</strong></div>
-      </div>
-      <div class="actions"><button class="btn" id="nextBtn" type="button">Next question</button></div>
-    </div>
-  </section>
-
-  <!-- End -->
-  <section class="card" id="end" hidden>
-    <div class="final">
-      <span class="label" id="endLabel">Today's ten</span>
-      <span class="total"><span id="total">0</span><small> / 1000</small></span>
-      <span class="rank" id="rank">Sharp Guesser</span>
-    </div>
-    <ul class="rounds" id="rounds"></ul>
-    <textarea class="share" id="shareText" rows="4" readonly aria-label="Shareable result"></textarea>
-    <div class="actions">
-      <button class="btn sun" id="copyBtn" type="button">Copy result</button>
-      <button class="btn" id="againRandom" type="button">Random ten</button>
-      <button class="btn ghost" id="againDaily" type="button">Replay today's</button>
-    </div>
-  </section>
-
-  <p class="foot">Shmeeks · a new set of ten every day, or as many random rounds as you like.</p>
+  <main id="app"></main>
 </div>
+<div class="toast" id="toast"></div>
 
 <script>
-(function () {
-  "use strict";
+/* ---------- Scoring tiers ---------- */
+// Each tier is a shade of gold that gets richer on the way up to the Jackpot.
+const TIERS = [
+  {name:"JACKPOT!",    pts:1000, emoji:"💰", color:"linear-gradient(135deg,#fff6b0 0%,#ffd700 28%,#e3a400 52%,#fff0a0 74%,#d19a00 100%)"},
+  {name:"BIG SPENDER", pts:600,  emoji:"🥇", color:"linear-gradient(135deg,#f9d55a,#c99212)"},
+  {name:"PRICEY",      pts:350,  emoji:"🥈", color:"linear-gradient(135deg,#f6dc80,#d3a63c)"},
+  {name:"MID-RANGE",   pts:150,  emoji:"🥉", color:"linear-gradient(135deg,#f3e2a4,#dcbb6c)"},
+  {name:"BARGAIN BIN", pts:50,   emoji:"🪙", color:"linear-gradient(135deg,#f3e9c6,#e2cf98)"},
+  {name:"CLEARANCE",   pts:10,   emoji:"🏷️", color:"linear-gradient(135deg,#f6f1e2,#e8dec2)"},
+];
+const MISS = {name:"NO SALE", pts:0, emoji:"⬛", color:"#bdbdbd"};
+const ROUND_LEN = 7, TIME_LIMIT = 30;
 
-  // ---------- Question bank ----------
-  var BANK = {
-    number: [
-      { q: "How many keys does a standard piano have?", a: 88, cat: "Music" },
-      { q: "How many bones are in the adult human body?", a: 206, cat: "Science" },
-      { q: "How tall is Mount Everest, in feet?", a: 29032, cat: "Geography" },
-      { q: "How many member states are in the United Nations?", a: 193, cat: "World" },
-      { q: "How many Earth days does it take Mars to orbit the Sun?", a: 687, cat: "Space" },
-      { q: "How many squares are on a chessboard?", a: 64, cat: "Games" },
-      { q: "How long is a marathon, in miles?", a: 26.2, cat: "Sports" },
-      { q: "How many elements are on the periodic table?", a: 118, cat: "Science" },
-      { q: "How many hearts does an octopus have?", a: 3, cat: "Nature" },
-      { q: "How many teeth are in a full adult set?", a: 32, cat: "Science" },
-      { q: "At sea level, water boils at what temperature in °F?", a: 212, cat: "Science" },
-      { q: "On average, how far is the Moon from Earth, in miles?", a: 238855, cat: "Space" },
-      { q: "How many time zones does Russia span?", a: 11, cat: "Geography" },
-      { q: "How many hours are in a week?", a: 168, cat: "Numbers" },
-      { q: "How many pounds are in a stone?", a: 14, cat: "Numbers" },
-      { q: "How long is an Olympic swimming pool, in meters?", a: 50, cat: "Sports" },
-      { q: "How many amendments does the US Constitution have?", a: 27, cat: "History" },
-      { q: "How many feet are in a mile?", a: 5280, cat: "Numbers" },
-      { q: "How many colored stickers are on a standard 3×3 Rubik's Cube?", a: 54, cat: "Games" },
-      { q: "How tall is the Burj Khalifa, in meters?", a: 828, cat: "Places" },
-      { q: "How many players per team are on a soccer field at once?", a: 11, cat: "Sports" },
-      { q: "How many liters are in one US gallon?", a: 3.785, cat: "Numbers" },
-      { q: "How many minutes are in a day?", a: 1440, cat: "Numbers" },
-      { q: "How many legs does a spider have?", a: 8, cat: "Nature" },
-      { q: "How many sides does a dodecagon have?", a: 12, cat: "Math" },
-      { q: "How many strings does a standard violin have?", a: 4, cat: "Music" },
-      { q: "How many seconds are in an hour?", a: 3600, cat: "Numbers" },
-      { q: "How many US states have a Pacific Ocean coastline?", a: 5, cat: "Geography" },
-      { q: "About how many miles around is Earth at the equator?", a: 24901, cat: "Geography" }
-    ],
-    year: [
-      { q: "In what year did Apollo 11 land on the Moon?", a: 1969, cat: "Space" },
-      { q: "In what year did the Titanic sink?", a: 1912, cat: "History" },
-      { q: "In what year did the Berlin Wall fall?", a: 1989, cat: "History" },
-      { q: "In what year was the US Declaration of Independence adopted?", a: 1776, cat: "History" },
-      { q: "In what year was the first iPhone released?", a: 2007, cat: "Tech" },
-      { q: "In what year did the Wright brothers make their first powered flight?", a: 1903, cat: "History" },
-      { q: "In what year did Columbus first reach the Americas?", a: 1492, cat: "History" },
-      { q: "In what year did the Golden Gate Bridge open?", a: 1937, cat: "Places" },
-      { q: "In what year were the first modern Olympic Games held in Athens?", a: 1896, cat: "Sports" },
-      { q: "In what year was the Magna Carta sealed?", a: 1215, cat: "History" },
-      { q: "In what year did the Chernobyl nuclear disaster happen?", a: 1986, cat: "History" },
-      { q: "In what year did YouTube launch?", a: 2005, cat: "Tech" },
-      { q: "In what year was the Eiffel Tower completed?", a: 1889, cat: "Places" },
-      { q: "In what year was Sputnik 1 launched?", a: 1957, cat: "Space" },
-      { q: "In what year did California become a US state?", a: 1850, cat: "History" },
-      { q: "In what year did World War I begin?", a: 1914, cat: "History" },
-      { q: "In what year did World War II end?", a: 1945, cat: "History" },
-      { q: "In what year was Netflix founded?", a: 1997, cat: "Tech" }
-    ],
-    text: [
-      { q: "What is the capital of Australia?", a: ["Canberra"], cat: "Geography" },
-      { q: "What is the largest planet in our solar system?", a: ["Jupiter"], cat: "Space" },
-      { q: "Which element has the chemical symbol Au?", a: ["Gold"], cat: "Science" },
-      { q: "Who painted The Starry Night?", a: ["Vincent van Gogh", "Van Gogh"], cat: "Art" },
-      { q: "What is the longest river in South America?", a: ["Amazon", "Amazon River"], cat: "Geography" },
-      { q: "Who wrote the novel 1984?", a: ["George Orwell", "Orwell"], cat: "Books" },
-      { q: "What is the capital of Canada?", a: ["Ottawa"], cat: "Geography" },
-      { q: "Which gas do plants absorb from the air to make food?", a: ["Carbon dioxide", "CO2"], cat: "Science" },
-      { q: "What is the largest ocean on Earth?", a: ["Pacific", "Pacific Ocean"], cat: "Geography" },
-      { q: "What is the currency of Japan?", a: ["Yen", "Japanese yen"], cat: "World" },
-      { q: "Who composed the Moonlight Sonata?", a: ["Ludwig van Beethoven", "Beethoven"], cat: "Music" },
-      { q: "What is the largest hot desert in the world?", a: ["Sahara", "Sahara Desert"], cat: "Geography" },
-      { q: "Which scientist developed the theory of general relativity?", a: ["Albert Einstein", "Einstein"], cat: "Science" },
-      { q: "What is the capital of Turkey?", a: ["Ankara"], cat: "Geography" },
-      { q: "What is the fastest land animal?", a: ["Cheetah"], cat: "Nature" },
-      { q: "Which element has the chemical symbol Fe?", a: ["Iron"], cat: "Science" },
-      { q: "What is the tallest mountain in Africa?", a: ["Kilimanjaro", "Mount Kilimanjaro", "Mt Kilimanjaro"], cat: "Geography" },
-      { q: "What is the largest organ of the human body?", a: ["Skin"], cat: "Science" },
-      { q: "Which Shakespeare play is about a prince of Denmark?", a: ["Hamlet"], cat: "Books" },
-      { q: "What is the capital of Brazil?", a: ["Brasília", "Brasilia"], cat: "Geography" },
-      { q: "Which planet is best known for its rings?", a: ["Saturn"], cat: "Space" },
-      { q: "Who painted the ceiling of the Sistine Chapel?", a: ["Michelangelo"], cat: "Art" },
-      { q: "What is the smallest country in the world by area?", a: ["Vatican City", "Vatican", "Holy See"], cat: "Geography" },
-      { q: "What is the name of the galaxy we live in?", a: ["Milky Way", "Milky Way Galaxy"], cat: "Space" },
-      { q: "Who is credited with patenting the telephone in 1876?", a: ["Alexander Graham Bell", "Graham Bell"], cat: "History" },
-      { q: "What is the main ingredient in guacamole?", a: ["Avocado", "Avocados"], cat: "Food" },
-      { q: "What is the capital of New Zealand?", a: ["Wellington"], cat: "Geography" },
-      { q: "What is the national animal of Scotland?", a: ["Unicorn"], cat: "World" },
-      { q: "What is the lightest chemical element?", a: ["Hydrogen"], cat: "Science" },
-      { q: "What is the longest bone in the human body?", a: ["Femur", "Thigh bone", "Thighbone"], cat: "Science" },
-      { q: "What is the hardest natural substance?", a: ["Diamond"], cat: "Science" },
-      { q: "Which language has the most native speakers?", a: ["Mandarin", "Mandarin Chinese", "Chinese"], cat: "World" },
-      { q: "What is the largest country by area?", a: ["Russia"], cat: "Geography" },
-      { q: "What is a baby kangaroo called?", a: ["Joey"], cat: "Nature" },
-      { q: "Which planet is closest to the Sun?", a: ["Mercury"], cat: "Space" },
-      { q: "In which city is the Colosseum?", a: ["Rome"], cat: "Places" },
-      { q: "Who wrote Pride and Prejudice?", a: ["Jane Austen", "Austen"], cat: "Books" },
-      { q: "In which sport would you score a birdie?", a: ["Golf"], cat: "Sports" },
-      { q: "Which red gemstone is July's birthstone?", a: ["Ruby"], cat: "Nature" },
-      { q: "Which country gave the Statue of Liberty to the United States?", a: ["France"], cat: "History" },
-      { q: "What is the largest species of shark?", a: ["Whale shark"], cat: "Nature" }
-    ]
-  };
-  var MIX = { text: 4, number: 3, year: 3 };
-  var ROUNDS = 10;
+/* ---------- Question bank ----------
+   tiers[0] = the most expensive (Jackpot) ... tiers[4] = cheap (Bargain Bin),
+   tiers[5] = technically valid but about as cheap as it gets (Clearance).
+   noun = words stripped from the player's answer ("ruby roman grapes" -> "ruby roman").
+   ladder = what's shown on the reveal for each tier. */
+const BANK = [
+{cat:"Fruit", q:"What is the most expensive type of grape?", noun:["grape","grapes"],
+ ladder:["Ruby Roman","Shine Muscat","Kyoho","Cotton Candy","Autumn Royal","Red Seedless"],
+ tiers:[
+  ["ruby roman"],
+  ["shine muscat"],
+  ["kyoho","pione","queen nina","nagano purple"],
+  ["cotton candy","moon drop","moon drops","champagne","witch finger","muscat"],
+  ["crimson","autumn royal","niagara","muscadine","scuppernong","merlot","cabernet","cabernet sauvignon","pinot","pinot noir","chardonnay","zinfandel","malbec","riesling","sauvignon blanc","syrah","shiraz","grenache","tempranillo","sangiovese","nebbiolo","sultana","ruby seedless","black seedless","jupiter","sweet scarlet","catawba","delaware"],
+  ["green","red","black","purple","white","seedless","red seedless","green seedless","table","wine","raisin","thompson","thompson seedless","red globe","globe","flame","concord","regular","normal","grocery store"]],
+ fact:"Ruby Roman grapes are grown only in Japan's Ishikawa Prefecture, and the season's first bunch has sold at auction for over $10,000."},
+{cat:"Cars", q:"What is the most expensive car ever sold?", noun:["car","cars"],
+ ladder:["Mercedes 300 SLR","Ferrari 250 GTO","Ferrari","Aston Martin / Bugatti","Lamborghini","Toyota"],
+ tiers:[
+  ["mercedes 300 slr","mercedes benz 300 slr","300 slr","uhlenhaut","uhlenhaut coupe","300 slr uhlenhaut"],
+  ["mercedes","mercedes benz","benz","250 gto","ferrari 250 gto","gto"],
+  ["ferrari","250 gt","335 s","ferrari 335","290 mm","ferrari 290"],
+  ["bugatti","rolls royce","rolls","boat tail","droptail","la voiture noire","mclaren f1","mclaren","aston martin","aston","aston martin dbr1","dbr1","jaguar","jaguar d type","d type","duesenberg","alfa romeo","alfa","porsche 917","917","ford gt40","gt40","shelby cobra"],
+  ["lamborghini","lambo","porsche","bentley","koenigsegg","pagani","maybach","tesla","ford gt","shelby","corvette","bmw","audi","lexus","acura","cadillac","lincoln","genesis","volvo","land rover","range rover","lotus","maserati","rivian","lucid","infiniti","polestar","rimac","hennessey","ssc","delorean","amg","packard","cord","talbot lago","bugatti chiron","veyron"],
+  ["ford","chevrolet","chevy","toyota","honda","nissan","hyundai","kia","mazda","subaru","volkswagen","vw","jeep","dodge","gmc","buick","chrysler","mitsubishi","fiat","mini","prius","civic","camry","corolla","f150","mustang","minivan","sedan","truck"]],
+ fact:"A 1955 Mercedes-Benz 300 SLR Uhlenhaut Coupé sold for about $143 million in a private 2022 auction. Only two were ever built."},
+{cat:"Drinks", q:"What is the most expensive type of coffee bean?", noun:["coffee","bean","beans"],
+ ladder:["Geisha","Kopi Luwak","Jamaica Blue Mountain","Kona","Colombian","Folgers"],
+ tiers:[
+  ["geisha","gesha","panama geisha","esmeralda","hacienda la esmeralda"],
+  ["black ivory","kopi luwak","luwak","civet","elephant"],
+  ["jamaica blue mountain","jamaican blue mountain","jamaican","blue mountain","st helena","saint helena"],
+  ["kona","hawaiian","hawaii","yemen","yemeni","mocha","mokha","bourbon pointu","laurina","pink bourbon","sidamo","yirgacheffe"],
+  ["arabica","colombian","colombia","ethiopian","ethiopia","brazilian","brazil","sumatra","sumatran","guatemalan","kenyan","kenya","costa rican","mexican","peruvian","honduran","vietnamese","liberica","excelsa","bourbon","typica","caturra"],
+  ["folgers","maxwell house","starbucks","dunkin","nescafe","instant","decaf","robusta","espresso","dark roast","light roast","medium roast","french roast","italian roast","cold brew","regular","drip","house blend"]],
+ fact:"Panama Geisha lots regularly break auction records, with top lots selling for thousands of dollars per pound."},
+{cat:"Kitchen", q:"What is the most expensive spice?", noun:["spice","spices"],
+ ladder:["Saffron","Vanilla","Cardamom","Cloves","Cumin","Salt"],
+ tiers:[
+  ["saffron"],
+  ["vanilla","vanilla bean"],
+  ["cardamom","mahlab","long pepper","grains of paradise"],
+  ["cloves","clove","nutmeg","mace","star anise","sumac","pink peppercorn","fenugreek"],
+  ["white pepper","cumin","smoked paprika","turmeric","ginger","chili","cayenne","coriander","thyme","rosemary","sage","dill","bay leaf","allspice","mustard","mustard seed","fennel","caraway","anise","celery seed","curry","garam masala","za atar","sesame","poppy seed"],
+  ["salt","pepper","black pepper","garlic powder","onion powder","chili powder","paprika","red pepper flakes","oregano","basil","parsley","cinnamon","garlic"]],
+ fact:"Each saffron crocus gives just three hand-picked stigmas. It takes tens of thousands of flowers to make a single pound."},
+{cat:"Food", q:"What is the most expensive type of cheese?", noun:["cheese","cheeses"],
+ ladder:["Pule (donkey)","Moose Cheese","Caciocavallo Podolico","Parmigiano","Gouda","American"],
+ tiers:[
+  ["pule","donkey","donkey milk"],
+  ["moose","white stilton gold","stilton gold"],
+  ["caciocavallo podolico","caciocavallo","bitto storico","bitto","rogue river blue","rogue river"],
+  ["parmigiano","parmesan","parmigiano reggiano","gruyere","comte","roquefort","manchego","stilton","epoisses","burrata","camembert","truffle"],
+  ["brie","gouda","feta","goat","blue","gorgonzola","havarti","ricotta","muenster","emmental","fontina","asiago","pecorino","romano","halloumi","paneer","queso fresco","cotija","oaxaca","mascarpone","limburger","gruyere","edam","jarlsberg","raclette","taleggio","goat cheese","chevre"],
+  ["american","string","cheddar","mozzarella","velveeta","cottage","cream","colby","monterey jack","jack","pepper jack","provolone","swiss","kraft","shredded","processed"]],
+ fact:"Pule is made from Balkan donkey milk at a single nature reserve in Serbia and can cost over $1,000 per kilo."},
+{cat:"Luxury Food", q:"What is the most expensive type of caviar?", noun:["caviar"],
+ ladder:["Almas","Beluga","Osetra","Sevruga","Paddlefish","Salmon Roe"],
+ tiers:[
+  ["almas","white beluga","albino","albino beluga"],
+  ["beluga"],
+  ["osetra","ossetra","oscietra","kaluga","imperial"],
+  ["sevruga","sterlet","siberian","baerii","white sturgeon","sturgeon"],
+  ["paddlefish","hackleback","whitefish","bowfin"],
+  ["salmon","salmon roe","trout","tobiko","ikura","roe","fish eggs","lumpfish","masago","capelin"]],
+ fact:"Almas comes from rare albino beluga sturgeon in the Caspian Sea and has sold for well over $20,000 per kilo."},
+{cat:"Luxury Food", q:"What is the most expensive type of truffle?", noun:["truffle","truffles"],
+ ladder:["White Alba","Black Périgord","Burgundy","Summer","Chinese","Chocolate"],
+ tiers:[
+  ["white","alba","white alba","tuber magnatum","magnatum","italian white","piedmont"],
+  ["black","perigord","black perigord","black winter","winter","tuber melanosporum","french black"],
+  ["burgundy","bianchetto","tuber uncinatum","autumn"],
+  ["summer","black summer","tuber aestivum","oregon","oregon white","oregon black","pecan"],
+  ["chinese","desert","terfez"],
+  ["chocolate","lindt","oil","truffle oil","fries","truffle fries","salt"]],
+ fact:"White Alba truffles from Italy's Piedmont can't be farmed. Single large specimens have sold for six figures at auction."},
+{cat:"Gems", q:"What is the most expensive color of diamond?", noun:["diamond","diamonds"],
+ ladder:["Red","Blue / Pink","Green","Yellow / Colorless","Champagne","Brown"],
+ tiers:[
+  ["red","fancy red"],
+  ["blue","pink"],
+  ["green","purple","violet","orange","chameleon"],
+  ["yellow","canary","colorless","white","clear"],
+  ["champagne","cognac","chocolate","gray","grey"],
+  ["lab grown","black","brown","salt and pepper","fake","cubic zirconia","moissanite"]],
+ fact:"Red is the rarest diamond color. Only a handful are known, and they can top $1 million per carat."},
+{cat:"Materials", q:"What is the most expensive type of wood?", noun:["wood","woods"],
+ ladder:["Agarwood","African Blackwood","Pink Ivory","Rosewood","Oak","Pine"],
+ tiers:[
+  ["agarwood","agar","oud","aloeswood","gaharu","eaglewood"],
+  ["african blackwood","blackwood","grenadilla","mpingo","sandalwood"],
+  ["pink ivory","lignum vitae","ebony","bocote","cocobolo","snakewood","dalbergia"],
+  ["rosewood","purpleheart","koa","zebrawood","teak","bubinga","burl","marblewood"],
+  ["oak","white oak","red oak","mahogany","walnut","black walnut","maple","cherry","cedar","ash","redwood","hickory","beech","elm","cypress"],
+  ["pine","plywood","mdf","balsa","poplar","fir","douglas fir","spruce","birch","bamboo","driftwood","basswood","alder","particle board","pressure treated","2x4"]],
+ fact:"Agarwood forms when certain trees fight off a fungal infection, creating the resin used for oud. Top grades can sell for over $100,000 per kilo."},
+{cat:"Drinks", q:"What is the most expensive type of tea?", noun:["tea","teas"],
+ ladder:["Da Hong Pao","Aged Pu-erh","Gyokuro","Oolong","Earl Grey","Lipton"],
+ tiers:[
+  ["da hong pao","dahongpao","big red robe"],
+  ["pu erh","puerh","pu er","aged pu erh","tieguanyin","tie guan yin","panda dung","panda"],
+  ["gyokuro","silver needle","matcha","yellow gold","gold tips"],
+  ["oolong","white","darjeeling","jasmine","longjing","dragon well","sencha","milk oolong","first flush"],
+  ["earl grey","english breakfast","chai","rooibos","hibiscus","yerba mate"],
+  ["lipton","iced","sweet","black","green","chamomile","peppermint","mint","herbal","arizona","bag","tea bag"]],
+ fact:"Da Hong Pao from the original mother trees in China's Wuyi Mountains once sold for over $1 million per kilo. Harvesting those trees is now banned."},
+{cat:"Seafood", q:"What is the most expensive fish sold for food?", noun:["fish"],
+ ladder:["Bluefin Tuna","Tuna","Fugu","Halibut","Salmon","Tilapia"],
+ tiers:[
+  ["bluefin","bluefin tuna","pacific bluefin","atlantic bluefin","hon maguro","kuromaguro","maguro"],
+  ["tuna","toro","otoro"],
+  ["fugu","puffer","pufferfish","blowfish","eel","unagi","bigeye","bigeye tuna"],
+  ["chilean sea bass","sea bass","toothfish","halibut","swordfish","black cod","sablefish","turbot","dover sole","sole","monkfish","king salmon","copper river"],
+  ["salmon","cod","trout","snapper","red snapper","mahi","mahi mahi","flounder","bass","perch","haddock","grouper","walleye","whitefish","yellowtail","hamachi","albacore","skipjack","barramundi","branzino","sturgeon","arctic char","sockeye"],
+  ["tilapia","catfish","pollock","canned tuna","tuna can","sardine","anchovy","carp","herring","mackerel","sticks","fish sticks","goldfish","swai"]],
+ fact:"Bluefin tuna rules Tokyo's New Year auctions. A single 278 kg fish sold for about $3.1 million in 2019."},
+{cat:"Fruit", q:"What is the most expensive type of melon?", noun:["melon","melons"],
+ ladder:["Yubari King","Densuke Watermelon","Muskmelon","Galia","Casaba","Watermelon"],
+ tiers:[
+  ["yubari","yubari king"],
+  ["densuke","black watermelon","densuke watermelon","crown","shizuoka crown","musk crown"],
+  ["muskmelon","musk","japanese","earls","square watermelon","square"],
+  ["charentais","galia","sharlyn","canary","santa claus","piel de sapo","crenshaw","ogen","persian"],
+  ["casaba","bitter","kiwano","horned","sugar baby"],
+  ["cantaloupe","honeydew","watermelon","rockmelon","seedless watermelon"]],
+ fact:"Yubari King melons come from Hokkaido, Japan. A single pair once sold for about $45,000 at auction."},
+{cat:"Fruit", q:"What is the most expensive type of mango?", noun:["mango","mangos","mangoes"],
+ ladder:["Taiyo no Tamago","Alphonso","Kesar","Kent","Ataulfo","Tommy Atkins"],
+ tiers:[
+  ["taiyo no tamago","egg of the sun","sun egg","miyazaki"],
+  ["alphonso","hapus"],
+  ["kesar","carabao","nam dok mai","irwin","sindhri","chaunsa"],
+  ["kent","keitt","haden","valencia pride","pickering"],
+  ["honey","champagne","ataulfo"],
+  ["tommy atkins","tommy","green","red","yellow","dried","regular","frozen","grocery"]],
+ fact:"Taiyo no Tamago (\"Egg of the Sun\") mangoes are grown in Miyazaki, Japan. A premium pair can sell for thousands of dollars."},
+{cat:"Food", q:"What is the most expensive type of honey?", noun:["honey"],
+ ladder:["Centauri","Manuka","Leatherwood","Acacia","Wildflower","Clover"],
+ tiers:[
+  ["centauri","elvish","cave"],
+  ["manuka","sidr","yemeni sidr"],
+  ["leatherwood","tualang","sourwood","tupelo","chestnut"],
+  ["acacia","buckwheat","lavender","heather","eucalyptus","raw","comb","honeycomb"],
+  ["wildflower","orange blossom","alfalfa","local"],
+  ["clover","sue bee","creamed","whipped","hot","bear","honey bear","squeeze","regular","store bought"]],
+ fact:"Centauri honey is harvested from a cave about 2,500 meters up in Turkey's mountains and has been certified at roughly €10,000 per kilo."},
+{cat:"Luxury", q:"Which brand made the most expensive wristwatch ever sold?", noun:["watch","watches","company","brand"],
+ ladder:["Patek Philippe","Rolex","Audemars Piguet","Richard Mille","Omega","Casio"],
+ tiers:[
+  ["patek","patek philippe","philippe","grandmaster chime"],
+  ["rolex","paul newman","daytona"],
+  ["audemars","audemars piguet","ap","vacheron","vacheron constantin","lange","a lange","a lange and sohne","breguet"],
+  ["richard mille","mille","jaeger","jaeger lecoultre","blancpain","hublot","fp journe","journe","greubel forsey","jacob","jacob and co","graff","harry winston","chopard","piaget","franck muller","h moser","moser","ulysse nardin","girard perregaux","zenith"],
+  ["omega","tag","tag heuer","cartier","breitling","seiko","grand seiko","tudor","iwc","panerai","longines","bulova","movado","hamilton","tissot","oris","gucci","bvlgari","bulgari","rado","raymond weil","shinola"],
+  ["casio","g shock","timex","fossil","swatch","invicta","michael kors","apple","apple watch","samsung","garmin","citizen","fitbit"]],
+ fact:"Patek Philippe's Grandmaster Chime sold for about $31 million at a 2019 charity auction, the record for a wristwatch."},
+{cat:"Animals", q:"What is the most expensive dog breed?", noun:["dog","dogs","puppy"],
+ ladder:["Tibetan Mastiff","Samoyed","Rottweiler","French Bulldog","Labrador","Mutt"],
+ tiers:[
+  ["tibetan mastiff","tibetan"],
+  ["samoyed","lowchen","czechoslovakian wolfdog","wolfdog","chow chow","chow"],
+  ["english bulldog","bulldog","rottweiler","pharaoh hound","azawakh","saluki","akita","dogue de bordeaux","mastiff"],
+  ["french bulldog","frenchie","cavalier","cavalier king charles","german shepherd","pomeranian","doberman","great dane","husky","siberian husky","bernese","newfoundland","irish wolfhound","cane corso"],
+  ["lab","labrador","labrador retriever","golden","golden retriever","goldendoodle","labradoodle","doodle","poodle","standard poodle","pug","corgi","boxer","shih tzu","yorkie","yorkshire terrier","maltese","border collie","australian shepherd","aussie","shiba inu","shiba","bichon","havanese","schnauzer","boston terrier","basset hound","bloodhound","bernedoodle","weimaraner","vizsla","malamute","st bernard","saint bernard","dalmatian","collie","sheltie","pointer","spaniel","cocker spaniel","shepherd"],
+  ["mutt","mixed","mix","rescue","shelter","stray","pit bull","pitbull","chihuahua","beagle","dachshund","jack russell","terrier","greyhound"]],
+ fact:"A Tibetan Mastiff puppy reportedly sold for nearly $2 million in China in 2014. The breed was raised to guard Himalayan monasteries."},
+{cat:"Materials", q:"What is the most expensive type of leather?", noun:["leather","skin","hide"],
+ ladder:["Crocodile","Alligator","Ostrich","Shell Cordovan","Lambskin","Cowhide"],
+ tiers:[
+  ["crocodile","croc","saltwater crocodile","nile crocodile","niloticus","porosus","himalaya"],
+  ["alligator","gator"],
+  ["ostrich","stingray","shagreen","galuchat","lizard","python"],
+  ["snakeskin","snake","shell cordovan","cordovan","eel","kangaroo","bison"],
+  ["lambskin","lamb","calfskin","suede","goatskin","goat","nubuck","sheepskin","deerskin","buffalo"],
+  ["faux","vegan","pigskin","pig","cowhide","cow","pleather","bonded","bonded leather","synthetic","fake"]],
+ fact:"Crocodile tops the leather market. Hermès Himalaya Birkins made from Nile crocodile have sold for hundreds of thousands of dollars."},
+{cat:"Materials", q:"What is the most expensive natural fiber for clothing?", noun:["fiber","fibre","fabric","wool"],
+ ladder:["Vicuña","Qiviut","Cashmere","Mohair","Wool","Cotton"],
+ tiers:[
+  ["vicuna","vicugna"],
+  ["qiviut","muskox","musk ox","shahtoosh","chiru","sea silk","byssus","lotus","lotus silk"],
+  ["cashmere","baby cashmere","guanaco","pashmina"],
+  ["mohair","alpaca","angora","merino","silk","camel","camel hair","yak"],
+  ["wool","linen","hemp","bamboo","flax","sheep"],
+  ["cotton","polyester","nylon","rayon","jute","acrylic","spandex","fleece","denim"]],
+ fact:"Vicuñas are wild relatives of the llama that can only be shorn every few years. A vicuña coat can cost tens of thousands of dollars."},
+{cat:"Fruit", q:"What is the most expensive type of strawberry?", noun:["strawberry","strawberries","berry","berries"],
+ ladder:["Bijin-hime","White Jewel","Omakase","Alpine","Everbearing","Supermarket"],
+ tiers:[
+  ["bijin hime","bijinhime","bijin","beautiful princess"],
+  ["white jewel","shiroi houseki","amaou"],
+  ["omakase","oishii","pineberry","white","tochiotome","sagahonoka","japanese","yumenoka"],
+  ["alpine","wild","fraises des bois","mara des bois","albion","seascape","chandler"],
+  ["june bearing","everbearing","chocolate covered"],
+  ["regular","driscoll","driscolls","red","frozen","garden","supermarket","grocery","store"]],
+ fact:"Bijin-hime (\"beautiful princess\") strawberries from Japan can be the size of a tennis ball, and one berry can sell for around $500."},
+{cat:"Animals", q:"What is the most expensive pet bird species?", noun:["bird","birds"],
+ ladder:["Hyacinth Macaw","Scarlet Macaw","African Grey","Amazon","Cockatiel","Parakeet"],
+ tiers:[
+  ["hyacinth","hyacinth macaw","palm cockatoo","black palm cockatoo"],
+  ["macaw","scarlet macaw","blue throated","blue throated macaw","green wing","green wing macaw","blue and gold"],
+  ["cockatoo","african grey","african gray","grey","gray","congo","timneh"],
+  ["amazon","eclectus","toucan","conure","sun conure","caique","pionus"],
+  ["cockatiel","lovebird","parrotlet","parrot"],
+  ["parakeet","budgie","budgerigar","canary","finch","dove","pigeon","chicken","sparrow","duck","crow","robin","blue jay","hummingbird","quail"]],
+ fact:"Hyacinth macaws and palm cockatoos can cost $10,000 to $40,000, and they can live for decades."},
+{cat:"Food", q:"What is the most expensive type of potato?", noun:["potato","potatoes"],
+ ladder:["La Bonnotte","Jersey Royal","Fingerling","Yukon Gold","Maris Piper","Russet"],
+ tiers:[
+  ["la bonnotte","bonnotte","bonotte"],
+  ["jersey royal","jersey","vitelotte","noirmoutier"],
+  ["fingerling","la ratte","ratte","pink fir apple","purple peruvian"],
+  ["purple","yukon","yukon gold","blue","truffle"],
+  ["sweet","yam","baby","new","golden","maris piper","king edward","kennebec"],
+  ["russet","idaho","white","red","baking","tater tot","french fry","fries","instant","mashed"]],
+ fact:"La Bonnotte potatoes grow only on the French island of Noirmoutier, fertilized with seaweed, and can sell for around €500 per kilo."},
+];
 
-  // ---------- Randomness ----------
-  function hashStr(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
-  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-  function shuffle(arr, rng) { var a = arr.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rng() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-  function todayKey() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
-  function pickSet(rng) {
-    var set = [];
-    Object.keys(MIX).forEach(function (kind) {
-      shuffle(BANK[kind], rng).slice(0, MIX[kind]).forEach(function (item) { set.push(Object.assign({ kind: kind }, item)); });
-    });
-    return shuffle(set, rng);
+/* ---------- Answer matching ---------- */
+const FILLER = new Set("a an the type types of kind kinds variety breed color colour species most expensive i think its it is maybe probably answer".split(" "));
+function norm(s){
+  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/&/g," and ").replace(/['’`]/g,"").replace(/[^a-z0-9]+/g," ").trim();
+}
+function clean(s, nouns){
+  const toks = norm(s).split(" ").filter(Boolean);
+  const stripped = toks.filter(t => !FILLER.has(t) && !nouns.includes(t));
+  return stripped.length ? stripped : toks.filter(t => !FILLER.has(t));
+}
+// Edit distance where swapping two neighboring letters ("parakete") counts as one typo.
+function lev(a,b){
+  if(a===b) return 0;
+  const m=a.length,n=b.length, d=[];
+  for(let i=0;i<=m;i++){ d[i]=[i]; }
+  for(let j=0;j<=n;j++) d[0][j]=j;
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++){
+    const c=a[i-1]===b[j-1]?0:1;
+    d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+c);
+    if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1]) d[i][j]=Math.min(d[i][j],d[i-2][j-2]+1);
   }
-
-  // ---------- Scoring ----------
-  function norm(s) {
-    return String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
-      .replace(/&/g, " and ").replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim()
-      .replace(/^(the|a|an) /, "");
-  }
-  function lev(a, b) {
-    if (a === b) return 0;
-    var m = a.length, n = b.length; if (!m) return n; if (!n) return m;
-    var prev = new Array(n + 1), cur = new Array(n + 1);
-    for (var j = 0; j <= n; j++) prev[j] = j;
-    for (var i = 1; i <= m; i++) {
-      cur[0] = i;
-      for (j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-      var t = prev; prev = cur; cur = t;
-    }
-    return prev[n];
-  }
-  function scoreText(input, answers) {
-    var g = norm(input); if (!g) return 0;
-    var best = 0;
-    answers.forEach(function (ans) {
-      var a = norm(ans), s;
-      if (g === a) s = 100;
-      else if (a.length >= 4 && (" " + g + " ").indexOf(" " + a + " ") !== -1 && g.length <= a.length + 14) s = 100;
-      else {
-        var d = lev(g, a);
-        if (a.length <= 4) s = d === 1 ? 60 : 0;
-        else {
-          var sim = 1 - d / Math.max(g.length, a.length);
-          if (sim >= 0.9) s = 100;
-          else if (sim >= 0.75) s = Math.round(70 + (sim - 0.75) / 0.15 * 25);
-          else if (sim >= 0.6) s = Math.round(20 + (sim - 0.6) / 0.15 * 40);
-          else s = 0;
-        }
+  return d[m][n];
+}
+BANK.forEach(q=>{
+  q.compiled = q.tiers.map(list=>list.map(a=>{
+    const toks = clean(a,q.noun); return {toks, joined:toks.join("")};
+  }));
+});
+// Returns tier index 0-4, or -1 for no match. Longest (most specific) alias wins,
+// so "black summer truffle" scores as Summer, not Black.
+function grade(raw,q){
+  const toks = clean(raw,q.noun);
+  if(!toks.length) return -1;
+  const whole = toks.join("");
+  let best=null;
+  q.compiled.forEach((list,ti)=>list.forEach(a=>{
+    // Model numbers (anything with a digit) must match exactly; words get typo slack.
+    const L=a.joined.length, tol = /\d/.test(a.joined) ? 0 : L>=9?2 : L>=5?1 : 0;
+    let d = Math.abs(whole.length-L)<=tol ? lev(whole,a.joined) : Infinity;
+    for(let k=Math.max(1,a.toks.length-1); k<=a.toks.length+1; k++){
+      for(let i=0;i+k<=toks.length;i++){
+        const w=toks.slice(i,i+k).join("");
+        if(Math.abs(w.length-L)<=tol) d=Math.min(d,lev(w,a.joined));
       }
-      if (s > best) best = s;
-    });
-    return best;
-  }
-  function parseNum(input) {
-    var s = String(input).replace(/,/g, "").replace(/\$/g, "").trim().toLowerCase();
-    var m = s.match(/(-?\d*\.?\d+)\s*(thousand|million|billion|k|m|b)?/);
-    if (!m) return null;
-    var v = parseFloat(m[1]); if (isNaN(v)) return null;
-    var mult = { k: 1e3, thousand: 1e3, m: 1e6, million: 1e6, b: 1e9, billion: 1e9 }[m[2]] || 1;
-    return v * mult;
-  }
-  function scoreNumber(g, a) {
-    if (g === null || g <= 0) return 0;
-    var r = Math.abs(Math.log(g / a));
-    if (r <= 0.005) return 100;
-    return Math.max(0, Math.min(99, Math.round(100 * Math.exp(-2.3 * r))));
-  }
-  function scoreYear(g, a) {
-    if (g === null) return 0;
-    var d = Math.abs(Math.round(g) - a);
-    return d === 0 ? 100 : Math.round(100 * Math.exp(-d / 7));
-  }
-  function band(p) { return p >= 85 ? "good" : p >= 50 ? "ok" : p > 0 ? "warm" : "miss"; }
-  function verdictFor(p) { return p === 100 ? "Bullseye" : p >= 85 ? "So close" : p >= 50 ? "Nearby" : p > 0 ? "Warm-ish" : "Miss"; }
-  function rankFor(t) { return t >= 900 ? "Shmeeks Supreme" : t >= 750 ? "Big Brain" : t >= 600 ? "Sharp Guesser" : t >= 400 ? "Respectable" : t >= 200 ? "Warming Up" : "Fresh Shmeek"; }
-  function fmt(n) { return Number(n).toLocaleString("en-US", { maximumFractionDigits: 3 }); }
+    }
+    if(d<=tol){
+      const score = L*10 - d*3;
+      if(!best || score>best.score || (score===best.score && ti<best.ti)) best={ti,score};
+    }
+  }));
+  return best ? best.ti : -1;
+}
 
-  // ---------- Storage (optional) ----------
-  function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
-  function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+/* ---------- Daily seed ---------- */
+function todayKey(){ return new Date().toLocaleDateString("en-CA"); }
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function hashStr(s){let h=1779033703^s.length;for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),3432918353);h=h<<13|h>>>19;}return h>>>0;}
+function pickRound(rng){
+  const idx=BANK.map((_,i)=>i);
+  for(let i=idx.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}
+  return idx.slice(0,ROUND_LEN).map(i=>BANK[i]);
+}
+const store = {
+  get(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+};
 
-  // ---------- DOM ----------
-  var $ = function (id) { return document.getElementById(id); };
-  var els = {
-    start: $("start"), play: $("play"), end: $("end"), status: $("status"), pips: $("pips"),
-    roundNum: $("roundNum"), scoreNum: $("scoreNum"), kindChip: $("kindChip"), catChip: $("catChip"),
-    qText: $("qText"), form: $("answerForm"), input: $("answerInput"), submit: $("submitBtn"), hint: $("hint"),
-    reveal: $("reveal"), verdict: $("verdict"), points: $("points"), fill: $("fill"),
-    yourAns: $("yourAns"), realAns: $("realAns"), offBox: $("offBox"), offBy: $("offBy"), next: $("nextBtn"),
-    total: $("total"), rank: $("rank"), rounds: $("rounds"), share: $("shareText"), copy: $("copyBtn"), endLabel: $("endLabel"),
-    bestLine: $("bestLine")
-  };
-  for (var i = 0; i < ROUNDS; i++) { var p = document.createElement("div"); p.className = "pip"; els.pips.appendChild(p); }
+/* ---------- Game state ---------- */
+const app=document.getElementById("app");
+let S=null, timerId=null, keyLock=false;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const total=()=>S.results.reduce((a,r)=>a+r.tier.pts,0);
+const fmt=n=>n.toLocaleString("en-US");
 
-  var state = { mode: "daily", day: todayKey(), set: [], idx: 0, results: [], phase: "start" };
+function ladderHTML(q,hit){
+  return `<ul class="ladder">${TIERS.map((t,i)=>`
+    <li class="${i===0?"jp ":""}${hit===undefined?"":(i===hit?"hit":"dim")}" style="background:${t.color}">
+      <span class="tier-name">${t.emoji} ${t.name}</span>
+      ${q?`<span class="ex">${esc(q.ladder[i])}</span>`:""}
+      <span class="pts">${t.pts}</span>
+    </li>`).join("")}</ul>`;
+}
 
-  function show(section) {
-    ["start", "play", "end"].forEach(function (s) { els[s].hidden = s !== section; });
-    els.status.hidden = section !== "play";
-  }
-  function paintPips() {
-    Array.prototype.forEach.call(els.pips.children, function (pip, i) {
-      var r = state.results[i];
-      pip.className = "pip" + (r ? " s-" + band(r.points) : (state.phase !== "start" && state.phase !== "end" && i === state.idx ? " now" : ""));
-    });
-  }
-  function runningTotal() { return state.results.reduce(function (s, r) { return s + r.points; }, 0); }
+function home(){
+  clearInterval(timerId);
+  const day=todayKey(), done=store.get("shmeeks-daily-"+day);
+  app.innerHTML=`<div class="card">
+    <h2>Come on down!</h2>
+    <p>Every question asks for the <b>most expensive</b> type of something. Type your answer. You have <b>${TIME_LIMIT} seconds</b> per question and ${ROUND_LEN} questions per round. The closer you get to the top price, the bigger the payout:</p>
+    ${ladderHTML()}
+    ${done ? `<p style="text-align:center;font-weight:900">Today's round: ${fmt(done.score)} pts &nbsp;${done.emojis}</p>
+      <div class="row"><button class="btn pink" id="bonus">Bonus round</button><button class="btn alt" id="share">Share today</button></div>`
+      : `<button class="btn block" id="play">Play today's round</button>`}
+    <p class="note">A new daily round drops at midnight. Typos are forgiven.</p>
+  </div>`;
+  if(done){
+    bonus.onclick=()=>start("bonus");
+    share.onclick=()=>shareResult(done.score,done.emojis,day);
+  } else play.onclick=()=>start("daily");
+}
 
-  function renderBest() {
-    var best = load("shmeeks.best");
-    var daily = load("shmeeks.daily." + state.day);
-    var parts = [];
-    if (daily) parts.push("Today's score: <strong>" + daily + "</strong>");
-    if (best) parts.push("Best ever: <strong>" + best + "</strong>");
-    els.bestLine.innerHTML = parts.join(" · ");
-    els.bestLine.hidden = !parts.length;
-  }
+function start(mode){
+  const rng = mode==="daily" ? mulberry32(hashStr("shmeeks"+todayKey())) : Math.random;
+  S={mode, qs:pickRound(rng), i:0, results:[]};
+  ask();
+}
 
-  function startGame(mode) {
-    state.mode = mode;
-    state.day = todayKey();
-    var seed = mode === "daily" ? hashStr("shmeeks:" + state.day) : (Math.random() * 4294967296) >>> 0;
-    state.set = pickSet(mulberry32(seed));
-    state.idx = 0; state.results = [];
-    show("play");
-    ask();
-  }
-
-  function ask() {
-    state.phase = "ask";
-    var q = state.set[state.idx];
-    els.roundNum.textContent = state.idx + 1;
-    els.scoreNum.textContent = runningTotal();
-    els.kindChip.textContent = q.kind === "number" ? "Number" : q.kind === "year" ? "Year" : "Answer";
-    els.catChip.textContent = q.cat;
-    els.qText.textContent = q.q;
-    els.input.value = "";
-    els.input.disabled = false;
-    els.submit.disabled = false;
-    els.input.setAttribute("inputmode", q.kind === "text" ? "text" : q.kind === "year" ? "numeric" : "decimal");
-    els.input.placeholder = q.kind === "number" ? "Type a number" : q.kind === "year" ? "Type a year" : "Type your answer";
-    els.hint.className = "hint";
-    els.hint.textContent = q.kind === "text" ? "Spelling doesn't have to be perfect." : q.kind === "year" ? "The closer the year, the more points." : "Ballparks count. 1.5k and 1500 both work.";
-    els.reveal.hidden = true;
-    els.fill.style.width = "0";
-    paintPips();
-    els.input.focus();
-  }
-
-  function submit(e) {
+function ask(){
+  const q=S.qs[S.i];
+  app.innerHTML=`
+    <div class="hud"><span class="chip">Q ${S.i+1} / ${ROUND_LEN}</span><span class="chip y">${fmt(total())} pts</span></div>
+    <div class="card">
+      <span class="cat">${esc(q.cat)}</span>
+      <p class="question">${esc(q.q)}</p>
+      <div class="timer"><div id="bar"></div></div>
+      <div class="timer-label"><span>Time left</span><span id="secs">${TIME_LIMIT}s</span></div>
+      <form id="f" autocomplete="off">
+        <div class="tag"><input id="ans" type="text" placeholder="Type your answer…" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="60" aria-label="Your answer"></div>
+        <button class="btn block" type="submit">Lock it in!</button>
+      </form>
+    </div>`;
+  const input=document.getElementById("ans"); input.focus();
+  document.getElementById("f").onsubmit=e=>{
     e.preventDefault();
-    if (state.phase !== "ask") return;
-    var q = state.set[state.idx];
-    var raw = els.input.value.trim();
-    if (!raw) { flag("Type an answer to lock it in."); return; }
-    var pts, guess, shown, off = null;
-    if (q.kind === "text") {
-      pts = scoreText(raw, q.a); shown = raw;
-    } else {
-      guess = parseNum(raw);
-      if (guess === null) { flag(q.kind === "year" ? "Type a year, like 1969." : "Type a number, like 250."); return; }
-      if (q.kind === "year") {
-        guess = Math.round(guess); pts = scoreYear(guess, q.a); shown = String(guess);
-        var d = Math.abs(guess - q.a); off = d === 0 ? "Exact" : d + (d === 1 ? " year" : " years");
-      } else {
-        pts = scoreNumber(guess, q.a); shown = fmt(guess);
-        var pct = Math.abs(guess - q.a) / q.a * 100;
-        off = guess === q.a ? "Exact" : (pct < 1 ? pct.toFixed(1) : Math.round(pct)) + "%";
-      }
-    }
-    state.results.push({ q: q, raw: shown, points: pts });
-    state.phase = "reveal";
-    els.input.disabled = true; els.submit.disabled = true;
-    els.hint.textContent = "";
+    if(!input.value.trim()){ input.parentElement.classList.remove("shake"); void input.offsetWidth; input.parentElement.classList.add("shake"); return; }
+    lockIn(false);
+  };
+  const t0=performance.now(), bar=document.getElementById("bar"), secs=document.getElementById("secs");
+  clearInterval(timerId);
+  timerId=setInterval(()=>{
+    const left=Math.max(0,TIME_LIMIT-(performance.now()-t0)/1000), frac=left/TIME_LIMIT;
+    bar.style.width=(frac*100)+"%";
+    bar.style.background = frac>.5?"var(--green)":frac>.2?"var(--orange)":"var(--red)";
+    secs.textContent=Math.ceil(left)+"s";
+    if(left<=0) lockIn(true);
+  },100);
+}
 
-    var b = band(pts);
-    els.verdict.textContent = verdictFor(pts);
-    els.verdict.className = "verdict c-" + b;
-    els.points.innerHTML = pts + " <small>/ 100</small>";
-    els.points.className = "points c-" + b;
-    els.yourAns.textContent = shown;
-    els.realAns.textContent = q.kind === "text" ? q.a[0] : q.kind === "year" ? String(q.a) : fmt(q.a);
-    els.offBox.hidden = off === null;
-    if (off !== null) els.offBy.textContent = off;
-    els.scoreNum.textContent = runningTotal();
-    els.next.textContent = state.idx === ROUNDS - 1 ? "See my score" : "Next question";
-    els.reveal.hidden = false;
-    requestAnimationFrame(function () { requestAnimationFrame(function () { els.fill.style.width = pts + "%"; }); });
-    paintPips();
-    els.next.focus();
+function lockIn(timedOut){
+  clearInterval(timerId);
+  const q=S.qs[S.i], raw=(document.getElementById("ans")?.value||"").trim();
+  const ti = raw ? grade(raw,q) : -1;
+  const tier = ti>=0 ? TIERS[ti] : MISS;
+  S.results.push({q, raw, ti, tier, timedOut});
+  reveal();
+}
+
+function reveal(){
+  const r=S.results[S.i], last=S.i===ROUND_LEN-1;
+  app.innerHTML=`
+    <div class="hud"><span class="chip">Q ${S.i+1} / ${ROUND_LEN}</span><span class="chip y">${fmt(total())} pts</span></div>
+    <div class="card">
+      <div class="reveal-banner${r.ti===0?" jackpot":""}" id="banner" style="background:${r.tier.color}">
+        <div class="t">${r.timedOut && !r.raw ? "TIME'S UP!" : r.tier.name}</div>
+        <div class="p">+${r.tier.pts}</div>
+      </div>
+      <p class="yours">You said: <b>${r.raw?esc(r.raw):"<i>nothing</i>"}</b>${r.timedOut&&r.raw?" (buzzer!)":""}</p>
+      <p class="yours">Top price: <b>${esc(r.q.ladder[0])}</b></p>
+      ${ladderHTML(r.q, r.ti>=0?r.ti:-1)}
+      <div class="fact">💡 ${esc(r.q.fact)}</div>
+      <button class="btn block" id="next">${last?"See my winnings":"Next question"}</button>
+    </div>`;
+  next.onclick=advance;
+  keyLock=true; setTimeout(()=>keyLock=false,500);
+  if(r.ti===0) setTimeout(coinBurst,250);
+}
+
+// Shower of coins and sparkles out of the Jackpot banner.
+function coinBurst(){
+  const b=document.getElementById("banner"); if(!b) return;
+  const box=b.getBoundingClientRect(), cx=box.left+box.width/2, cy=box.top+box.height/2;
+  const bits=["🪙","💰","✨","💎","🪙","⭐"];
+  for(let i=0;i<34;i++){
+    const s=document.createElement("span"); s.className="coin";
+    s.textContent=bits[i%bits.length];
+    const ang=Math.random()*Math.PI*2, dist=120+Math.random()*220;
+    s.style.setProperty("--x0",(cx-13)+"px"); s.style.setProperty("--y0",(cy-13)+"px");
+    s.style.setProperty("--dx",Math.cos(ang)*dist+"px");
+    s.style.setProperty("--dy",(Math.sin(ang)*dist*0.7+120)+"px");
+    s.style.setProperty("--r",(Math.random()*720-360)+"deg");
+    s.style.animationDelay=(Math.random()*0.25)+"s";
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(),2000);
   }
-  function flag(msg) { els.hint.className = "hint err"; els.hint.textContent = msg; els.input.focus(); }
+}
 
-  function next() {
-    if (state.phase !== "reveal") return;
-    state.idx++;
-    if (state.idx >= ROUNDS) finish(); else ask();
-  }
+function advance(){
+  S.i++;
+  if(S.i<ROUND_LEN) ask(); else finish();
+}
 
-  function finish() {
-    state.phase = "end";
-    var total = runningTotal();
-    var best = parseInt(load("shmeeks.best") || "0", 10);
-    if (total > best) save("shmeeks.best", String(total));
-    if (state.mode === "daily" && !load("shmeeks.daily." + state.day)) save("shmeeks.daily." + state.day, String(total));
-    els.endLabel.textContent = state.mode === "daily" ? "Today's ten · " + state.day : "Random ten";
-    els.total.textContent = total;
-    els.rank.textContent = rankFor(total);
-    els.rounds.innerHTML = "";
-    state.results.forEach(function (r) {
-      var li = document.createElement("li");
-      var dot = document.createElement("span"); dot.className = "dot s-" + band(r.points);
-      var q = document.createElement("span"); q.className = "q"; q.textContent = r.q.q;
-      var sub = document.createElement("span"); sub.className = "sub";
-      sub.textContent = "You: " + r.raw + " · Answer: " + (r.q.kind === "text" ? r.q.a[0] : r.q.kind === "year" ? r.q.a : fmt(r.q.a));
-      q.appendChild(sub);
-      var pts = document.createElement("span"); pts.className = "pts c-" + band(r.points); pts.textContent = r.points;
-      li.appendChild(dot); li.appendChild(q); li.appendChild(pts);
-      els.rounds.appendChild(li);
-    });
-    var squares = { good: "🟩", ok: "🟨", warm: "🟧", miss: "⬛" };
-    els.share.value = "Shmeeks " + (state.mode === "daily" ? state.day : "Random") + " · " + total + "/1000\n" +
-      state.results.map(function (r) { return squares[band(r.points)]; }).join("") + "\n" + rankFor(total);
-    els.copy.textContent = "Copy result";
-    show("end");
-    paintPips();
-  }
+function rankFor(score){
+  if(score>=6000) return "🏆 Showcase Champion";
+  if(score>=4500) return "🎡 Big Wheel Winner";
+  if(score>=3000) return "🛋️ Contestant's Row Regular";
+  if(score>=1500) return "🛒 Bargain Hunter";
+  return "🪟 Window Shopper";
+}
 
-  function copyResult() {
-    var text = els.share.value;
-    var done = function () { els.copy.textContent = "Copied"; };
-    var fallback = function () { els.share.focus(); els.share.select(); els.copy.textContent = "Selected. Press Ctrl+C"; };
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
-      else fallback();
-    } catch (e) { fallback(); }
-  }
+function finish(){
+  const score=total(), emojis=S.results.map(r=>r.tier.emoji).join(""), day=todayKey();
+  if(S.mode==="daily") store.set("shmeeks-daily-"+day,{score,emojis});
+  const best=Math.max(store.get("shmeeks-best")||0,score); store.set("shmeeks-best",best);
+  app.innerHTML=`<div class="card">
+    <h2 style="text-align:center">${S.mode==="daily"?"Today's winnings":"Bonus round"}</h2>
+    <div class="total" id="tot">0</div>
+    <div class="of">out of ${fmt(ROUND_LEN*1000)} · best ever ${fmt(best)}</div>
+    <div class="rank">${rankFor(score)}</div>
+    <div class="emojis">${emojis}</div>
+    <ul class="summary">${S.results.map(r=>`
+      <li><span>${r.tier.emoji}</span>
+        <span>${esc(r.q.q.replace(/^What is the |^Which /,"").replace(/\?$/,""))}
+          <small>You: ${r.raw?esc(r.raw):"—"} · Top: ${esc(r.q.ladder[0])}</small></span>
+        <span class="sp">${r.tier.pts}</span></li>`).join("")}</ul>
+    <div class="row">
+      ${S.mode==="daily"?`<button class="btn pink" id="share">Share</button>`:""}
+      <button class="btn" id="again">Bonus round</button>
+      <button class="btn alt" id="menu">Home</button>
+    </div>
+  </div>`;
+  if(S.mode==="daily") share.onclick=()=>shareResult(score,emojis,day);
+  again.onclick=()=>start("bonus");
+  menu.onclick=home;
+  // count-up
+  const el=document.getElementById("tot"), t0=performance.now();
+  (function tick(now){const p=Math.min(1,(now-t0)/900);el.textContent=fmt(Math.round(score*(1-Math.pow(1-p,3))));if(p<1)requestAnimationFrame(tick);})(t0);
+}
 
-  function goHome() { state.phase = "start"; state.results = []; show("start"); renderBest(); paintPips(); }
+function shareResult(score,emojis,day){
+  const text=`SHMEEKS ${day}\n${emojis}\n${fmt(score)} / ${fmt(ROUND_LEN*1000)} · ${rankFor(score)}`;
+  const done=()=>toast("Copied to clipboard!");
+  if(navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(done,()=>fallbackCopy(text));
+  else fallbackCopy(text);
+}
+function fallbackCopy(text){
+  const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");toast("Copied to clipboard!");}catch(e){toast("Couldn't copy");}
+  ta.remove();
+}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1600);}
 
-  // Demo numbers on the start screen come from the real scoring functions.
-  $("demoNum").textContent = scoreNumber(80, 88) + " pts";
-  $("demoYear").textContent = scoreYear(1968, 1969) + " pts";
-  $("demoWord").textContent = scoreText("Kilimanjoro", ["Kilimanjaro"]) + " pts";
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter" && document.getElementById("next") && !keyLock){ e.preventDefault(); advance(); }
+});
 
-  els.form.addEventListener("submit", submit);
-  els.next.addEventListener("click", next);
-  $("playDaily").addEventListener("click", function () { startGame("daily"); });
-  $("playRandom").addEventListener("click", function () { startGame("random"); });
-  $("againDaily").addEventListener("click", function () { startGame("daily"); });
-  $("againRandom").addEventListener("click", function () { startGame("random"); });
-  $("home").addEventListener("click", goHome);
-  els.copy.addEventListener("click", copyResult);
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Enter" && state.phase === "reveal" && document.activeElement !== els.next) { e.preventDefault(); next(); }
-  });
-
-  renderBest();
-  paintPips();
-})();
+home();
 </script>
 </body>
 </html>
